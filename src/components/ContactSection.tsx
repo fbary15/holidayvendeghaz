@@ -27,7 +27,7 @@ export default function ContactSection() {
         <SectionHeading
           kicker="Kapcsolat"
           title={<>Kérdése van? Írjon nekünk</>}
-          subtitle="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Készséggel állunk rendelkezésére."
+          subtitle="Kérdése van a foglalással vagy a szálláshellyel kapcsolatban? Írjon nekünk, és készséggel állunk rendelkezésére."
         />
 
         <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-8">
@@ -77,8 +77,7 @@ export default function ContactSection() {
                   </span>
                   <h3 className="font-heading text-xl text-mist mb-2">Üzenetét megkaptuk!</h3>
                   <p className="text-sm text-mist/55 max-w-xs">
-                    Lorem ipsum dolor sit amet. Hamarosan válaszolunk a megadott
-                    e-mail címen.
+                    Köszönjük! Hamarosan válaszolunk a megadott e-mail címen.
                   </p>
                   <button
                     type="button"
@@ -100,7 +99,7 @@ export default function ContactSection() {
                   </label>
                   <label htmlFor="c-message" className="block">
                     <span className="block text-xs font-medium text-mist/55 mb-1.5">Üzenet</span>
-                    <textarea id="c-message" name="message" rows={5} required className={inputCls} placeholder="Lorem ipsum dolor sit amet…" />
+                    <textarea id="c-message" name="message" rows={5} required className={inputCls} placeholder="Miben segíthetünk?" />
                   </label>
                   <button
                     type="submit"

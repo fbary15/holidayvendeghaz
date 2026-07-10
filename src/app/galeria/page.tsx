@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Gallery from "@/components/Gallery";
 import CookieConsent from "@/components/CookieConsent";
-import { LOREM_MEDIUM } from "@/lib/lorem";
 
 export const metadata: Metadata = {
   title: "Galéria",
@@ -26,7 +25,9 @@ export default function GaleriaPage() {
               <span className="gradient-text">vendégházat</span>
             </h1>
             <p className="mt-6 text-mist/55 text-base md:text-lg leading-relaxed">
-              {LOREM_MEDIUM}
+              Tekintse meg a Holiday Vendégházat kívül-belül: a fedett teraszt és a
+              wellness-részt, a világos belső tereket, a saját stéget és a
+              Hármas-Körös holtágának partján fekvő, háborítatlan környezetet.
             </p>
           </header>
 

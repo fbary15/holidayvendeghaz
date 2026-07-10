@@ -25,8 +25,9 @@ export default function Footer() {
               </span>
             </div>
             <p className="mt-6 text-mist/50 text-sm leading-relaxed">
-              Csendes, modern pihenőhely a Hármas-Körös holtága mellett. Lorem ipsum
-              dolor sit amet, consectetur adipiscing elit.
+              Csendes, teljesen felszerelt pihenőhely a Hármas-Körös holtága
+              mellett – wellness, saját stég és háborítatlan nyugalom az év minden
+              napján.
             </p>
           </div>
 

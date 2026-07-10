@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Logo from "./Logo";
+import PhotoImage from "./PhotoImage";
 import { PinIcon, PhoneIcon } from "./Icons";
 import { CONTACT } from "@/lib/site";
+import { HERO } from "@/lib/photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -21,9 +23,12 @@ export default function Hero() {
       id="kezdolap"
       className="relative min-h-screen flex items-center justify-center overflow-hidden noise-overlay"
     >
-      {/* Háttér: matt fekete + finom zöld aura */}
+      {/* Háttér: valódi légifotó a vendégházról + sötét fátyol az olvashatóságért */}
       <div className="absolute inset-0 bg-coal-950" />
-      <div className="absolute inset-0 pine-glow opacity-90" />
+      <PhotoImage photo={HERO} sizes="100vw" priority className="scale-105" />
+      <div className="absolute inset-0 bg-coal-950/55" />
+      <div className="absolute inset-0 bg-gradient-to-b from-coal-950/85 via-coal-950/35 to-coal-950" />
+      <div className="absolute inset-0 pine-glow opacity-30" />
       <div
         className="absolute inset-0 opacity-[0.04]"
         style={{
@@ -77,8 +82,9 @@ export default function Hero() {
           animate="show"
           className="mt-8 text-lg md:text-xl text-mist/60 max-w-2xl mx-auto leading-relaxed"
         >
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua.
+          Teljes felszereltség, wellness és háborítatlan nyugalom a Hármas-Körös
+          holtága mellett – 3 hálószoba akár 6 főnek, saját stéggel, egész éves
+          jakuzzival és szezonális medencével.
         </motion.p>
 
         <motion.div

@@ -1,34 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import PlaceholderImage from "./PlaceholderImage";
+import PhotoImage from "./PhotoImage";
 import AnimatedSection from "./AnimatedSection";
+import { GALLERY } from "@/lib/photos";
 
 /*
  * Galéria (Galéria aloldal – szerződés 1.1 / III. Oldalstruktúra).
  *
- * ⚠️ Egyelőre stílusos helykitöltő csempék. A fotózás a szerződés 1.3. pontja
- * szerint külön megállapodás tárgya; élesítés előtt a Megbízó által biztosított
- * valódi fotókra kell cserélni (a PlaceholderImage helyére next/image kerül).
+ * A Megbízó által biztosított valódi fotókból összeállított, rendezett galéria,
+ * kattintható nagyítással (lightbox), billentyű- és érintésbaráttal.
  */
 
-type Item = { label: string; index: number };
-
-const items: Item[] = [
-  { label: "Nappali", index: 0 },
-  { label: "Étkező", index: 3 },
-  { label: "Konyha", index: 2 },
-  { label: "Hálószoba", index: 1 },
-  { label: "Második hálószoba", index: 4 },
-  { label: "Fürdőszoba", index: 5 },
-  { label: "Terasz", index: 2 },
-  { label: "Kert", index: 0 },
-  { label: "Grillező", index: 3 },
-  { label: "Környék", index: 4 },
-  { label: "Körös-part", index: 1 },
-  { label: "Naplemente", index: 5 },
-];
+const items = GALLERY;
 
 export default function Gallery() {
   const [open, setOpen] = useState<number | null>(null);
@@ -98,22 +84,30 @@ export default function Gallery() {
     };
   }, [isOpen]);
 
+  const current = open !== null ? items[open] : null;
+
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {items.map((item, i) => (
-          <AnimatedSection key={item.label + i} delay={(i % 3) * 0.06}>
+          <AnimatedSection key={item.photo.src} delay={(i % 3) * 0.06}>
             <button
               type="button"
               onClick={(e) => {
                 triggerRef.current = e.currentTarget;
                 setOpen(i);
               }}
-              className="group block w-full aspect-[4/3] rounded-2xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-400"
-              aria-label={`${item.label} – nagyítás`}
+              className="group relative block w-full aspect-[4/3] rounded-2xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-400"
+              aria-label={`${item.caption} – nagyítás`}
             >
-              <span className="block w-full h-full transition-transform duration-500 group-hover:scale-105">
-                <PlaceholderImage index={item.index} label={item.label} />
+              <PhotoImage
+                photo={item.photo}
+                sizes="(max-width: 768px) 50vw, 33vw"
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-coal-950/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <span className="absolute bottom-2.5 left-3 right-3 text-left text-[11px] font-medium text-mist/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow">
+                {item.caption}
               </span>
             </button>
           </AnimatedSection>
@@ -121,7 +115,7 @@ export default function Gallery() {
       </div>
 
       <AnimatePresence>
-        {open !== null && (
+        {current && (
           <motion.div
             ref={dialogRef}
             initial={{ opacity: 0 }}
@@ -132,14 +126,14 @@ export default function Gallery() {
             onClick={close}
             role="dialog"
             aria-modal="true"
-            aria-label={`${items[open].label} – galéria nézet`}
+            aria-label={`${current.caption} – galéria nézet`}
           >
             {/* Bezárás */}
             <button
               ref={closeBtnRef}
               type="button"
               onClick={close}
-              className="absolute top-5 right-5 w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
+              className="absolute top-5 right-5 z-10 w-11 h-11 rounded-full border border-white/15 bg-coal-950/40 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
               aria-label="Bezárás"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -149,7 +143,7 @@ export default function Gallery() {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); prev(); }}
-              className="absolute left-3 sm:left-6 w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
+              className="absolute left-3 sm:left-6 z-10 w-11 h-11 rounded-full border border-white/15 bg-coal-950/40 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
               aria-label="Előző kép"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
@@ -161,23 +155,31 @@ export default function Gallery() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-4xl aspect-[16/10] rounded-2xl overflow-hidden"
+              className="relative flex items-center justify-center max-w-6xl w-full"
             >
-              <PlaceholderImage index={items[open].index} label={items[open].label} />
+              <Image
+                src={current.photo.src}
+                alt={current.photo.alt}
+                width={current.photo.width}
+                height={current.photo.height}
+                sizes="(max-width: 768px) 100vw, 90vw"
+                priority
+                className="w-auto h-auto max-w-full max-h-[82vh] rounded-2xl object-contain"
+              />
             </motion.div>
 
             {/* Következő */}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); next(); }}
-              className="absolute right-3 sm:right-6 w-11 h-11 rounded-full border border-white/15 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
+              className="absolute right-3 sm:right-6 z-10 w-11 h-11 rounded-full border border-white/15 bg-coal-950/40 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
               aria-label="Következő kép"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </button>
 
-            <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-mist/60">
-              {items[open].label} · {open + 1} / {items.length}
+            <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-mist/70 text-center px-4">
+              {current.caption} · {open! + 1} / {items.length}
             </p>
           </motion.div>
         )}

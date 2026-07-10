@@ -30,23 +30,33 @@ src/
   components/            # Navbar, Hero, About, Amenities, Booking, Contact, Gallery, Footer, ...
   lib/
     site.ts             # központi konfiguráció (SITE_URL, kapcsolat, NTAK, geo)
-    lorem.ts            # ideiglenes latin helykitöltő szövegek
+    photos.ts           # generált fotókatalógus (hero, bemutatkozás, galéria)
 public/
   favicon.svg           # zöld ház jelkép
   images/logo.jpg       # az eredeti logó (referencia)
+  images/gallery/       # a Megbízó valódi, optimalizált fotói
 ```
 
 ## Ez az „alap” (foundation) – teendők élesítés előtt
 
 A szerződés szerint néhány elem tudatosan helykitöltő / bekötendő:
 
-- **Szövegek:** minden törzsszöveg latin *lorem ipsum* – a Megbízó által biztosított
-  végleges szövegre cserélendő (szerződés 1.3).
-- **Fotók:** a galéria és a képek stílusos helykitöltő csempék
-  (`PlaceholderImage`) – valódi fotókra cserélendők (szerződés 1.3).
+- **Szövegek:** ✅ **bekötve.** A Megbízó által biztosított végleges magyar
+  szövegek (Hero, Bemutatkozás, Szolgáltatások, Galéria, Footer, meta/SEO) be
+  vannak építve; a *lorem ipsum* helykitöltők eltávolítva. A foglalás/kapcsolat
+  űrlapok visszajelző szövegei is véglegesek.
+- **Fotók:** ✅ **bekötve.** A Megbízó által biztosított valódi fotók a
+  `public/images/gallery/` mappában (optimalizált JPEG), a kiosztásukat a
+  `src/lib/photos.ts` (generált) fájl írja le: hero háttérkép, bemutatkozó képek,
+  főoldali galéria-előnézet és a teljes Galéria (`next/image`, blur előnézettel).
+  A feliratok (alt/caption) szükség szerint finomíthatók.
 - **Foglalási rendszer:** a naptár + űrlap a felhasználói felület alapja; az
   elérhetőség jelenleg példaadat (mock). Bekötendő a valós háttér: API route →
   **Google Naptár** + e-mail értesítések (szerződés III.).
+- **Árak:** ⚠️ **helykitöltő.** A `PRICING` objektum (`src/lib/site.ts`,
+  `placeholder: true`) miatt a foglalási szekcióban „Ár megadása hamarosan"
+  jelenik meg. Kitöltés: add meg a `perNight` (és opcionálisan `deposit`)
+  mezőt, majd állítsd a `placeholder` értékét `false`-ra.
 - **Kapcsolati űrlap:** a beküldés még nem küld e-mailt – bekötendő az
   `/api/kapcsolat` route.
 - **`SITE_URL`** (`src/lib/site.ts`): a végleges domainre állítandó.

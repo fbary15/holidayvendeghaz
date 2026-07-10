@@ -2,25 +2,56 @@ import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
 import {
   WifiIcon,
-  KitchenIcon,
-  GardenIcon,
+  HotTubIcon,
+  PoolIcon,
   ParkingIcon,
   GrillIcon,
   AcIcon,
   FishIcon,
-  BikeIcon,
+  BedIcon,
 } from "./Icons";
-import { LOREM_SHORT } from "@/lib/lorem";
 
 const amenities = [
-  { icon: WifiIcon, title: "Ingyenes WiFi" },
-  { icon: KitchenIcon, title: "Felszerelt konyha" },
-  { icon: GardenIcon, title: "Kert és terasz" },
-  { icon: ParkingIcon, title: "Ingyenes parkolás" },
-  { icon: GrillIcon, title: "Grillezési lehetőség" },
-  { icon: AcIcon, title: "Klimatizált szobák" },
-  { icon: FishIcon, title: "Horgászati lehetőség" },
-  { icon: BikeIcon, title: "Kerékpáros túrák" },
+  {
+    icon: HotTubIcon,
+    title: "Egész éves jakuzzi",
+    desc: "Fűtött, privát jakuzzi, amelyet az év bármely szakában, minden évszakban élvezhet.",
+  },
+  {
+    icon: PoolIcon,
+    title: "Szezonális medence",
+    desc: "A forró nyári napokon hűsítő medence a saját kertben, kizárólag az Önök számára.",
+  },
+  {
+    icon: AcIcon,
+    title: "Hűtő-fűtő klíma",
+    desc: "Kellemes hőmérséklet minden szobában – nyáron hűvös, a hidegebb napokon meleg.",
+  },
+  {
+    icon: WifiIcon,
+    title: "Ingyenes Wi-Fi",
+    desc: "Stabil internetkapcsolat a kikapcsolódáshoz és a folyamatos elérhetőséghez.",
+  },
+  {
+    icon: FishIcon,
+    title: "Saját stég és csónak",
+    desc: "Dobja be a botot a saját stégről, vagy szálljon vízre a csónakkal a holtágon.",
+  },
+  {
+    icon: GrillIcon,
+    title: "Kerti sütő és bográcsozó",
+    desc: "Készítsen finom vacsorát a szabadban, klasszikus Körös-parti hangulatban.",
+  },
+  {
+    icon: ParkingIcon,
+    title: "Tágas parkoló",
+    desc: "Több autó is biztonságosan és kényelmesen elfér az udvarban.",
+  },
+  {
+    icon: BedIcon,
+    title: "3 külön hálószoba",
+    desc: "Ideális elrendezés akár 6 fős családoknak és baráti társaságoknak.",
+  },
 ];
 
 export default function Amenities() {
@@ -30,7 +61,7 @@ export default function Amenities() {
         <SectionHeading
           kicker="Szolgáltatások"
           title={<>Minden adott a nyugodt pihenéshez</>}
-          subtitle={LOREM_SHORT}
+          subtitle="A klímától a wellnessig – nálunk minden megvan a zavartalan, kényelmes feltöltődéshez, az év 365 napján."
         />
 
         <div className="mt-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
@@ -46,7 +77,7 @@ export default function Amenities() {
                     {item.title}
                   </h3>
                   <p className="text-sm text-mist/55 leading-relaxed">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    {item.desc}
                   </p>
                 </div>
               </AnimatedSection>

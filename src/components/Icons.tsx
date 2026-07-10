@@ -94,6 +94,37 @@ export function BikeIcon({ className }: IconProps) {
   );
 }
 
+export function HotTubIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3 11h18v3a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-3Z" />
+      <path d="M6 11V8a1.5 1.5 0 0 1 3 0v.5" />
+      <path d="M9 6.5c0-1 1-1 1-2M13 6.5c0-1 1-1 1-2M17 6.5c0-1 1-1 1-2" />
+    </svg>
+  );
+}
+
+export function PoolIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3 9.5c1.4-1.5 2.8-1.5 4.2 0s2.8 1.5 4.2 0 2.8-1.5 4.2 0 2.8 1.5 4.2 0" />
+      <path d="M3 14.5c1.4-1.5 2.8-1.5 4.2 0s2.8 1.5 4.2 0 2.8-1.5 4.2 0 2.8 1.5 4.2 0" />
+      <path d="M3 19c1.4-1.5 2.8-1.5 4.2 0s2.8 1.5 4.2 0 2.8-1.5 4.2 0 2.8 1.5 4.2 0" />
+    </svg>
+  );
+}
+
+export function BedIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3 18v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5" />
+      <path d="M3 15h18" />
+      <path d="M7 11V9.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 9.5V11" />
+      <path d="M4 18v2M20 18v2" />
+    </svg>
+  );
+}
+
 export function PhoneIcon({ className }: IconProps) {
   return (
     <svg {...base(className)}>

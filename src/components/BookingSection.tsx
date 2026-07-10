@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
 import { CheckIcon } from "./Icons";
+import { PRICING } from "@/lib/site";
 
 /*
  * FOGLALÁSI RENDSZER – FOUNDATION (UI)
@@ -180,7 +181,35 @@ export default function BookingSection() {
           subtitle="Válassza ki az érkezés és a távozás napját a naptárban, majd küldje el foglalási igényét. Munkatársunk hamarosan visszaigazolja."
         />
 
-        <div className="mt-14 grid lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+        {/* Ár – ⚠️ HELYKITÖLTŐ (lásd PRICING a src/lib/site.ts-ben). */}
+        <AnimatedSection>
+          <div className="mt-10 mx-auto max-w-2xl glass-card rounded-3xl px-6 py-6 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-center sm:text-left">
+            <div className="sm:shrink-0">
+              <p className="text-[11px] uppercase tracking-wider text-mist/40 mb-1.5">
+                Ár / éjszaka
+              </p>
+              {PRICING.placeholder || !PRICING.perNight ? (
+                <span className="inline-flex items-center gap-2 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-sm font-medium text-amber-300">
+                  Ár megadása hamarosan
+                </span>
+              ) : (
+                <p className="font-heading text-3xl md:text-4xl font-semibold text-mist">
+                  {PRICING.perNight}
+                  {PRICING.deposit && (
+                    <span className="block mt-1 text-sm font-normal text-mist/55">
+                      Foglaló: {PRICING.deposit}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+            <p className="text-sm text-mist/55 leading-relaxed sm:border-l sm:border-white/10 sm:pl-6">
+              {PRICING.note}
+            </p>
+          </div>
+        </AnimatedSection>
+
+        <div className="mt-10 grid lg:grid-cols-2 gap-6 lg:gap-8 items-start">
           {/* NAPTÁR */}
           <AnimatedSection>
             <div className="glass-card rounded-3xl p-5 sm:p-7">
@@ -310,8 +339,8 @@ export default function BookingSection() {
                   </span>
                   <h3 className="font-heading text-xl text-mist mb-2">Köszönjük a foglalási igényt!</h3>
                   <p className="text-sm text-mist/55">
-                    Lorem ipsum dolor sit amet. Hamarosan felvesszük Önnel a kapcsolatot a
-                    megadott elérhetőségen a visszaigazolás érdekében.
+                    Hamarosan felvesszük Önnel a kapcsolatot a megadott
+                    elérhetőségen a foglalás visszaigazolása érdekében.
                   </p>
                   <button
                     type="button"
@@ -348,7 +377,7 @@ export default function BookingSection() {
                     </select>
                   </Field>
                   <Field label="Megjegyzés" htmlFor="b-msg">
-                    <textarea id="b-msg" name="message" rows={3} className={inputCls} placeholder="Lorem ipsum dolor sit amet…" />
+                    <textarea id="b-msg" name="message" rows={3} className={inputCls} placeholder="Írja meg, hány fővel érkeznek, vagy ha van egyéb kérése…" />
                   </Field>
 
                   {error && (

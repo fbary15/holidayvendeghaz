@@ -10,7 +10,7 @@ export const SITE_URL = "https://holidayvendeghaz.hu";
 export const SITE_NAME = "Holiday Vendégház";
 
 export const SITE_DESCRIPTION =
-  "Holiday Vendégház Békésszentandráson, a Siratói üdülősoron – csendes, modern pihenőhely a Hármas-Körös holtága mellett. Foglaljon szállást közvetlenül, kényelmesen.";
+  "Holiday Vendégház Békésszentandráson, a Siratói üdülősoron – 3 hálószobás, teljesen felszerelt pihenőhely a Hármas-Körös holtága mellett, saját stéggel, egész éves jakuzzival és szezonális medencével. Foglaljon szállást közvetlenül, kényelmesen.";
 
 /** Kapcsolati és cégadatok – a szerződésben és a megrendelő által megadott adatok. */
 export const CONTACT = {
@@ -30,4 +30,22 @@ export const CONTACT = {
   operator: "Kiss Tibor",
   /** Hozzávetőleges földrajzi koordináták (Békésszentandrás, Siratói üdülősor). */
   geo: { lat: 46.8686, lng: 20.4869 },
+} as const;
+
+/**
+ * Árazás – ⚠️ HELYKITÖLTŐ. A végleges árakat a Megbízó adja meg. Amíg a
+ * `placeholder` értéke `true`, az oldalon jól láthatóan, „megadandó" jelöléssel
+ * jelenik meg az ár. Élesítés előtt:
+ *   1) töltsd ki a `perNight` (és opcionálisan a `deposit`) mezőt,
+ *   2) állítsd a `placeholder` értékét `false`-ra,
+ *   3) igény szerint pontosítsd a `note` szöveget.
+ */
+export const PRICING = {
+  placeholder: true,
+  /** Ár / éjszaka, kész szövegként (pl. "35 000 Ft"). Élesítés előtt kitöltendő. */
+  perNight: "",
+  /** Opcionális foglaló (pl. "a teljes összeg 30%-a"); üresen elrejtve. */
+  deposit: "",
+  /** Rövid megjegyzés az ár mellett. */
+  note: "A pontos, szezonális árakért és ajánlatért kérjük, vegye fel velünk a kapcsolatot.",
 } as const;
