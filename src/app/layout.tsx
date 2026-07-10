@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, DM_Sans } from "next/font/google";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, CONTACT } from "@/lib/site";
+import SmoothScroll from "@/components/SmoothScroll";
 import "./globals.css";
 
 // Saját kiszolgálású betűk a next/font-on keresztül (nincs kérés a Google
@@ -130,6 +131,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <SmoothScroll />
         {children}
       </body>
     </html>

@@ -213,6 +213,50 @@ body {
   font-style: normal;
 }
 
+/* ===== KÉP HOVER TILT (egeret követő, lágy 3D dőlés) ===== */
+.tilt-card {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0) 45%
+  );
+  transition: opacity 0.4s ease;
+}
+.tilt-card:hover .tilt-glare {
+  opacity: 1;
+}
+
+/* ===== LÁGY GÖRGETÉS (Lenis) ===== */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+/* Amíg a Lenis aktív, a natív „smooth” görgetést kikapcsoljuk, hogy ne
+   ütközzön a Lenis animációjával (a natív marad, ha a Lenis nem indul el –
+   pl. csökkentett mozgásnál). */
+html.lenis {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 /* ===== CSÖKKENTETT MOZGÁS (akadálymentesség) ===== */
 @media (prefers-reduced-motion: reduce) {
   html {

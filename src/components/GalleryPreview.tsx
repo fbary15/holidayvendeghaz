@@ -2,6 +2,7 @@ import Link from "next/link";
 import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
 import PhotoImage from "./PhotoImage";
+import HoverTilt from "./HoverTilt";
 import { GALLERY_PREVIEW } from "@/lib/photos";
 
 // Egy kiegyensúlyozott „bento” elrendezés a főoldali galéria-előnézethez.
@@ -34,7 +35,7 @@ export default function GalleryPreview() {
         <AnimatedSection delay={0.1}>
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 auto-rows-[180px] md:auto-rows-[200px] gap-4">
             {GALLERY_PREVIEW.map((tile, i) => (
-              <div
+              <HoverTilt
                 key={tile.photo.src}
                 className={`group relative rounded-2xl overflow-hidden ${spans[i] ?? ""}`}
               >
@@ -43,11 +44,11 @@ export default function GalleryPreview() {
                   sizes={i === 0 ? "(max-width: 768px) 50vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
                   className="transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-coal-950/75 via-transparent to-transparent opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="absolute bottom-3 left-4 text-xs font-medium tracking-wide text-mist/90 drop-shadow">
+                <div className="absolute inset-0 z-[1] bg-gradient-to-t from-coal-950/75 via-transparent to-transparent opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="absolute z-[3] bottom-3 left-4 text-xs font-medium tracking-wide text-mist/90 drop-shadow">
                   {tile.label}
                 </span>
-              </div>
+              </HoverTilt>
             ))}
           </div>
         </AnimatedSection>

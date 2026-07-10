@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import PhotoImage from "./PhotoImage";
+import HoverTilt from "./HoverTilt";
 import AnimatedSection from "./AnimatedSection";
 import { GALLERY } from "@/lib/photos";
 
@@ -65,12 +66,14 @@ export default function Gallery() {
       }
     }
     window.addEventListener("keydown", onKey);
-    // Görgetés tiltása a lightbox alatt.
+    // Görgetés tiltása a lightbox alatt + a lágy görgetés (Lenis) felfüggesztése.
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    window.dispatchEvent(new CustomEvent("app:overlay", { detail: { open: true } }));
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
+      window.dispatchEvent(new CustomEvent("app:overlay", { detail: { open: false } }));
     };
   }, [isOpen, close, prev, next]);
 
@@ -97,18 +100,20 @@ export default function Gallery() {
                 triggerRef.current = e.currentTarget;
                 setOpen(i);
               }}
-              className="group relative block w-full aspect-[4/3] rounded-2xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-400"
+              className="group relative block w-full aspect-[4/3] rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-pine-400"
               aria-label={`${item.caption} – nagyítás`}
             >
-              <PhotoImage
-                photo={item.photo}
-                sizes="(max-width: 768px) 50vw, 33vw"
-                className="transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-coal-950/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="absolute bottom-2.5 left-3 right-3 text-left text-[11px] font-medium text-mist/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow">
-                {item.caption}
-              </span>
+              <HoverTilt className="absolute inset-0 rounded-2xl overflow-hidden">
+                <PhotoImage
+                  photo={item.photo}
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 z-[1] bg-gradient-to-t from-coal-950/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="absolute z-[3] bottom-2.5 left-3 right-3 text-left text-[11px] font-medium text-mist/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow">
+                  {item.caption}
+                </span>
+              </HoverTilt>
             </button>
           </AnimatedSection>
         ))}

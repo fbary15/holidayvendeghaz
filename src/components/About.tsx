@@ -1,5 +1,6 @@
 import AnimatedSection from "./AnimatedSection";
 import PhotoImage from "./PhotoImage";
+import HoverTilt from "./HoverTilt";
 import { CheckIcon } from "./Icons";
 import { ABOUT } from "@/lib/photos";
 
@@ -20,12 +21,20 @@ export default function About() {
           {/* Képek */}
           <AnimatedSection className="order-2 lg:order-1">
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mt-8">
-                <PhotoImage photo={ABOUT[0]} sizes="(max-width: 1024px) 45vw, 25vw" />
-              </div>
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden">
-                <PhotoImage photo={ABOUT[1]} sizes="(max-width: 1024px) 45vw, 25vw" />
-              </div>
+              <HoverTilt className="group relative aspect-[3/4] rounded-2xl overflow-hidden mt-8">
+                <PhotoImage
+                  photo={ABOUT[0]}
+                  sizes="(max-width: 1024px) 45vw, 25vw"
+                  className="transition-transform duration-700 group-hover:scale-105"
+                />
+              </HoverTilt>
+              <HoverTilt className="group relative aspect-[3/4] rounded-2xl overflow-hidden">
+                <PhotoImage
+                  photo={ABOUT[1]}
+                  sizes="(max-width: 1024px) 45vw, 25vw"
+                  className="transition-transform duration-700 group-hover:scale-105"
+                />
+              </HoverTilt>
             </div>
           </AnimatedSection>
 
