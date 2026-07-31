@@ -5,6 +5,13 @@ import type { NextConfig } from "next";
 // while blocking framing and plugins.
 const isDev = process.env.NODE_ENV !== "production";
 
+/**
+ * A Kapcsolat szekció beágyazott térképe (MapEmbed). `frame-src` nélkül a
+ * `default-src 'self'` vonatkozna rá, és a böngésző néma módon blokkolná a
+ * betöltést – üres, törött keret lenne belőle.
+ */
+const MAP_FRAME_SRC = "https://www.openstreetmap.org";
+
 const ContentSecurityPolicy = [
   "default-src 'self'",
   // 'unsafe-eval' is only needed by Next.js Fast Refresh in development.
@@ -13,6 +20,7 @@ const ContentSecurityPolicy = [
   "img-src 'self' data: blob:",
   "font-src 'self'",
   "connect-src 'self'",
+  `frame-src ${MAP_FRAME_SRC}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
