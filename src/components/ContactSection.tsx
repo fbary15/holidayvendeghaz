@@ -3,22 +3,37 @@
 import { useState } from "react";
 import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
-import Logo from "./Logo";
+import MapEmbed from "./MapEmbed";
 import { PinIcon, PhoneIcon, MailIcon, CheckIcon } from "./Icons";
 import { CONTACT } from "@/lib/site";
+import { LIMITS, submitContactForm, type FormStatus } from "@/lib/contact";
 
 const inputCls =
   "w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-mist placeholder:text-mist/50 focus:outline-none focus:border-pine-400/60 focus:bg-white/[0.06] transition-colors";
 
 export default function ContactSection() {
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<FormStatus>("idle");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // TODO: valós beküldés – POST egy /api/kapcsolat route-ra, amely e-mailt
-    // küld a holidayvendeghaz2024@gmail.com címre (szerződés III. – kapcsolati
-    // űrlap e-mail értesítéssel).
-    setSent(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    setStatus("sending");
+
+    const ok = await submitContactForm({
+      type: "kapcsolat",
+      name: String(data.get("name") ?? ""),
+      email: String(data.get("email") ?? ""),
+      message: String(data.get("message") ?? ""),
+      company: String(data.get("company") ?? ""),
+    });
+
+    if (ok) {
+      form.reset();
+      setStatus("success");
+    } else {
+      setStatus("error");
+    }
   }
 
   return (
@@ -49,28 +64,13 @@ export default function ContactSection() {
               </ContactRow>
             </div>
 
-            {/* Térkép helye */}
-            <div className="relative flex-1 min-h-56 rounded-3xl overflow-hidden glass-card flex items-center justify-center">
-              <div className="absolute inset-0 pine-glow opacity-50" />
-              <div className="relative text-center px-6">
-                <span className="text-pine-400/40 flex justify-center mb-3">
-                  <Logo className="w-12 h-12" strokeWidth={3} />
-                </span>
-                <p className="text-sm text-mist/45">
-                  Térkép helye –{" "}
-                  <span className="text-mist/70">{CONTACT.addressShort}</span>
-                </p>
-                <p className="text-[11px] text-mist/30 mt-2">
-                  (Beágyazott térkép élesítés előtt kerül ide)
-                </p>
-              </div>
-            </div>
+            <MapEmbed />
           </AnimatedSection>
 
           {/* Űrlap */}
           <AnimatedSection delay={0.1}>
             <div className="glass-card rounded-3xl p-5 sm:p-7 h-full">
-              {sent ? (
+              {status === "success" ? (
                 <div className="h-full min-h-72 flex flex-col items-center justify-center text-center">
                   <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-pine-500/20 text-pine-300 mb-4">
                     <CheckIcon className="w-7 h-7" />
@@ -81,32 +81,53 @@ export default function ContactSection() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setSent(false)}
+                    onClick={() => setStatus("idle")}
                     className="mt-6 text-sm font-semibold text-pine-300 hover:text-pine-200 transition-colors"
                   >
                     Új üzenet
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <label htmlFor="c-name" className="block">
                     <span className="block text-xs font-medium text-mist/55 mb-1.5">Név</span>
-                    <input id="c-name" name="name" type="text" required autoComplete="name" className={inputCls} placeholder="Teljes név" />
+                    <input id="c-name" name="name" type="text" required maxLength={LIMITS.name} autoComplete="name" className={inputCls} placeholder="Teljes név" />
                   </label>
                   <label htmlFor="c-email" className="block">
                     <span className="block text-xs font-medium text-mist/55 mb-1.5">E-mail</span>
-                    <input id="c-email" name="email" type="email" required autoComplete="email" className={inputCls} placeholder="pelda@email.hu" />
+                    <input id="c-email" name="email" type="email" required maxLength={LIMITS.email} autoComplete="email" className={inputCls} placeholder="pelda@email.hu" />
                   </label>
                   <label htmlFor="c-message" className="block">
                     <span className="block text-xs font-medium text-mist/55 mb-1.5">Üzenet</span>
-                    <textarea id="c-message" name="message" rows={5} required className={inputCls} placeholder="Miben segíthetünk?" />
+                    <textarea id="c-message" name="message" rows={5} required maxLength={LIMITS.message} className={inputCls} placeholder="Miben segíthetünk?" />
                   </label>
+
+                  {/* Honeypot: képernyőn kívül (nem sr-only, hogy a felolvasó se mondja ki),
+                      és nem disabled — a botok a disabled mezőket átugorják. */}
+                  <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
+                    <label htmlFor="c-company">Cég</label>
+                    <input type="text" id="c-company" name="company" tabIndex={-1} autoComplete="off" />
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full rounded-full bg-pine-500 px-6 py-3.5 text-sm font-semibold text-coal-950 hover:bg-pine-400 transition-colors"
+                    disabled={status === "sending"}
+                    className="w-full rounded-full bg-pine-500 px-6 py-3.5 text-sm font-semibold text-coal-950 hover:bg-pine-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Üzenet küldése
+                    {status === "sending" ? "Küldés…" : "Üzenet küldése"}
                   </button>
+
+                  {status === "error" && (
+                    <p role="status" className="rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">
+                      Sajnos hiba történt a küldés során. Kérjük, próbálja meg később, vagy írjon
+                      közvetlenül a{" "}
+                      <a href={`mailto:${CONTACT.email}`} className="underline break-all">
+                        {CONTACT.email}
+                      </a>{" "}
+                      címre.
+                    </p>
+                  )}
+
                   <p className="text-[11px] text-mist/60 text-center leading-relaxed">
                     Az üzenet elküldésével elfogadja az{" "}
                     <a href="/adatkezeles" className="text-pine-300 hover:underline">adatkezelési tájékoztatót</a>.

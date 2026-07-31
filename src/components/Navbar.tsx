@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/#bemutatkozas", label: "Bemutatkozás" },
   { href: "/#szolgaltatasok", label: "Szolgáltatások" },
   { href: "/#foglalas", label: "Foglalás" },
+  { href: "/#velemenyek", label: "Vélemények" },
   { href: "/#kapcsolat", label: "Kapcsolat" },
 ];
 

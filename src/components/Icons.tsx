@@ -159,6 +159,17 @@ export function CheckIcon({ className }: IconProps) {
   );
 }
 
+export function QuoteIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M9 7H5.5A1.5 1.5 0 0 0 4 8.5V12h5V7Z" />
+      <path d="M9 12c0 3-1.6 4.6-4 5" />
+      <path d="M20 7h-3.5A1.5 1.5 0 0 0 15 8.5V12h5V7Z" />
+      <path d="M20 12c0 3-1.6 4.6-4 5" />
+    </svg>
+  );
+}
+
 export function ImagesIcon({ className }: IconProps) {
   return (
     <svg {...base(className)}>

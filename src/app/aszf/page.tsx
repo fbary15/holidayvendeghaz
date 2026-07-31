@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
-import { CONTACT } from "@/lib/site";
+import { CONTACT, PRICING, formatFt } from "@/lib/site";
+import { formatHuDate } from "@/lib/booking";
 
 export const metadata: Metadata = {
   title: "ÁSZF",
@@ -56,8 +57,43 @@ export default function AszfPage() {
 
       <h2>4. Árak és fizetés</h2>
       <p>
-        A szállás díja és a fizetés módja a visszaigazolásban kerül rögzítésre.{" "}
-        <span className="legal-todo">[árak, előleg mértéke, fizetési módok és határidők]</span>
+        A feltüntetett árak a teljes nyaralóra, éjszakánként értendők. A minimum foglalható
+        időszak {PRICING.minNights} éjszaka.
+      </p>
+      <ul>
+        {PRICING.seasons.map((s) => (
+          <li key={s.id}>
+            <strong>{s.label}</strong> ({s.period}, az ünnepnapok kivételével):{" "}
+            {formatFt(s.pricePerNight)} / éj
+          </li>
+        ))}
+        <li>
+          <strong>Ünnepnapok:</strong> kizárólag csomagban, főszezoni áron (
+          {formatFt(PRICING.holidayPricePerNight)} / éj) foglalhatók:{" "}
+          {PRICING.holidayPackages
+            .map((p) => `${p.label} (${formatHuDate(p.from)} – ${formatHuDate(p.to)})`)
+            .join("; ")}
+          .
+        </li>
+        <li>
+          <strong>Háziállat:</strong> legfeljebb {PRICING.pets.max} hozható,{" "}
+          {formatFt(PRICING.pets.feePerNight)} / éjszaka felár ellenében.
+        </li>
+        {PRICING.conditions.map((c) => (
+          <li key={c.slice(0, 24)}>{c}</li>
+        ))}
+      </ul>
+      <p>
+        Az ár tartalmazza {PRICING.includes.join(" és ")}. Az ár <strong>nem</strong> tartalmazza{" "}
+        {PRICING.excludes.join(", ")}, amely a helyszínen fizetendő.
+      </p>
+      <p>
+        {PRICING.validityNote} Az első részlet mértékét, a fizetési módot és a fennmaradó összeg
+        megfizetésének határidejét a visszaigazolás tartalmazza.{" "}
+        <span className="legal-todo">
+          [első részlet mértéke (pl. a teljes díj 30%-a), fizetési mód és a fennmaradó összeg
+          határideje – kitöltendő]
+        </span>
       </p>
 
       <h2>5. Lemondási feltételek</h2>

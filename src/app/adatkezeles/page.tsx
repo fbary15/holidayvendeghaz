@@ -41,7 +41,7 @@ export default function AdatkezelesPage() {
       <ul>
         <li>Telefon: <a href={`tel:${CONTACT.phoneHref}`}>{CONTACT.phone}</a></li>
         <li>E-mail: <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></li>
-        <li>Adószám: <span className="legal-todo">[adószám]</span></li>
+        <li>Adószám: {CONTACT.taxNumber}</li>
       </ul>
 
       <h2>2. A kezelt adatok köre és célja</h2>
@@ -57,6 +57,12 @@ export default function AdatkezelesPage() {
         <li>
           <strong>Kapcsolatfelvételi űrlap:</strong> név, e-mail cím és az üzenet
           tartalma. Cél: a megkeresés megválaszolása.
+        </li>
+        <li>
+          <strong>Vendégkönyv (vélemény) űrlap:</strong> név, a vélemény szövege, valamint
+          – ha az érintett megadja – az e-mail cím. Cél: a visszajelzés fogadása és a
+          szolgáltatás minőségének javítása. A beküldött vélemény nem jelenik meg a
+          weboldalon, kizárólag e-mailben jut el a szálláshely üzemeltetőjéhez.
         </li>
         <li>
           <strong>Sütik:</strong> a weboldal működéséhez és látogatottságának méréséhez.
@@ -85,7 +91,12 @@ export default function AdatkezelesPage() {
       <ul>
         <li><strong>Tárhely- és domain-szolgáltató:</strong> <span className="legal-todo">[szolgáltató neve, székhelye]</span></li>
         <li><strong>Foglalási naptár:</strong> Google Ireland Limited (Google Naptár) – a foglalási igények háttérkezeléséhez.</li>
-        <li><strong>E-mail szolgáltató:</strong> <span className="legal-todo">[szolgáltató neve]</span></li>
+        <li>
+          <strong>E-mail továbbítás (űrlapok):</strong> Resend, Inc. (székhely:{" "}
+          <span className="legal-todo">[székhely – kitöltendő]</span>) – a kapcsolatfelvételi
+          és vendégkönyv űrlapok e-mailben történő továbbításához.
+        </li>
+        <li><strong>E-mail postafiók szolgáltató:</strong> <span className="legal-todo">[szolgáltató neve]</span></li>
       </ul>
 
       <h2>6. Az érintett jogai</h2>

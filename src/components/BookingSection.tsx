@@ -4,19 +4,23 @@ import { useMemo, useState, useEffect } from "react";
 import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
 import { CheckIcon } from "./Icons";
-import { PRICING } from "@/lib/site";
+import { PRICING, formatFt } from "@/lib/site";
+import {
+  BOOKING_LIMITS,
+  formatHuDate,
+  toISODate,
+  type Availability,
+  type BookingStatus,
+} from "@/lib/booking";
+import { quote, validateStay } from "@/lib/pricing";
 
 /*
- * FOGLALÁSI RENDSZER – FOUNDATION (UI)
+ * FOGLALÁSI RENDSZER – UI
  *
- * A szerződés III. pontja szerint a foglalási rendszer háttere a Google Naptár,
- * és a beküldött igény e-mailes / naptári értesítést vált ki. Ez itt a rendszer
- * felhasználói felületének alapja: interaktív naptár, amely a szabad / függőben
- * lévő / foglalt napokat eltérő színnel jeleníti meg, és egy foglalási űrlap.
- *
- * ⚠️ A tényleges beküldés (API route → Google Calendar + e-mail értesítés) még
- * bekötendő. Jelenleg az elérhetőség példaadat (mock), a beküldés pedig
- * kliensoldali visszaigazolást mutat.
+ * A szerződés III. pontja szerint a foglalási rendszer háttere a Google Naptár.
+ * Az elérhetőséget a `GET /api/foglalas` adja (szabad / függőben lévő / foglalt
+ * napok), a beküldés pedig a `POST /api/foglalas`-ra megy, amely naptáresemény-
+ * ként rögzíti az igényt, és értesítő e-mailt küld a vendégnek és a tulajdonosnak.
  */
 
 const DAY_NAMES = ["H", "K", "Sze", "Cs", "P", "Szo", "V"];
@@ -33,9 +37,8 @@ function startOfDay(d: Date) {
 function addDays(d: Date, n: number) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
-function keyOf(d: Date) {
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-}
+/** Naptári nap kulcsa – ugyanaz az `YYYY-MM-DD` formátum, amit az API ad vissza. */
+const keyOf = toISODate;
 function sameDay(a: Date | null, b: Date | null) {
   return !!a && !!b && a.getTime() === b.getTime();
 }
@@ -57,8 +60,10 @@ export default function BookingSection() {
   });
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<BookingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<Availability | null>(null);
+  const [pets, setPets] = useState(false);
 
   // A naptárat csak beépülés után rendereljük, hogy elkerüljük a „today”
   // szerver/kliens eltéréséből adódó hidratálási eltéréseket.
@@ -67,20 +72,29 @@ export default function BookingSection() {
     setMounted(true);
   }, []);
 
-  // Példa elérhetőség (mock) – a mai naphoz képest, hogy mindig „élőnek” tűnjön.
-  const { bookedSet, pendingSet } = useMemo(() => {
-    const booked = new Set<string>();
-    const pending = new Set<string>();
-    const mark = (set: Set<string>, from: number, to: number) => {
-      for (let i = from; i <= to; i++) set.add(keyOf(addDays(today, i)));
+  // Élő elérhetőség a Google Naptárból. Hiba esetén nem blokkoljuk a felületet:
+  // minden nap szabadként jelenik meg, a beküldés pedig szerveroldalon úgyis
+  // ellenőrzi az ütközést.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/foglalas")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: Availability | null) => {
+        if (!cancelled && data) setAvailability(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
     };
-    mark(booked, 4, 6);
-    mark(booked, 19, 22);
-    mark(booked, 33, 34);
-    mark(pending, 11, 12);
-    mark(pending, 26, 27);
-    return { bookedSet: booked, pendingSet: pending };
-  }, [today]);
+  }, []);
+
+  const { bookedSet, pendingSet } = useMemo(
+    () => ({
+      bookedSet: new Set(availability?.booked ?? []),
+      pendingSet: new Set(availability?.pending ?? []),
+    }),
+    [availability]
+  );
 
   function statusOf(d: Date): Status {
     if (d.getTime() < today.getTime()) return "past";
@@ -101,7 +115,7 @@ export default function BookingSection() {
   function handleSelect(d: Date) {
     const s = statusOf(d);
     if (s !== "free") return;
-    setSubmitted(false);
+    setStatus("idle");
     setError(null);
 
     if (!checkIn || (checkIn && checkOut)) {
@@ -133,6 +147,28 @@ export default function BookingSection() {
       ? Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000)
       : 0;
 
+  /** Foglalt + függő napok együtt – a „kimaradt 2 éjszaka” szabályhoz kell. */
+  const unavailable = useMemo(
+    () => new Set([...bookedSet, ...pendingSet]),
+    [bookedSet, pendingSet]
+  );
+
+  /** Ütközik-e a választás a foglalási szabályokkal (min. éjszaka, ünnepi csomag)? */
+  const stayIssue = useMemo(
+    () =>
+      checkIn && checkOut ? validateStay(keyOf(checkIn), keyOf(checkOut), unavailable) : null,
+    [checkIn, checkOut, unavailable]
+  );
+
+  /** Tájékoztató árkalkuláció – csak érvényes választásra. */
+  const priceQuote = useMemo(
+    () =>
+      checkIn && checkOut && !stayIssue
+        ? quote(keyOf(checkIn), keyOf(checkOut), pets ? 1 : 0, unavailable)
+        : null,
+    [checkIn, checkOut, stayIssue, pets, unavailable]
+  );
+
   const canGoPrev =
     view.year > today.getFullYear() ||
     (view.year === today.getFullYear() && view.month > today.getMonth());
@@ -157,17 +193,71 @@ export default function BookingSection() {
     return arr;
   }, [view]);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!checkIn || !checkOut) {
       setError("Kérjük, válasszon érkezési és távozási dátumot a naptárban.");
-      setSubmitted(false);
+      setStatus("idle");
       return;
     }
-    // TODO: valós beküldés – POST egy /api/foglalas route-ra, amely a Google
-    // Naptárba írja az igényt és e-mailt küld a vendégnek és a tulajdonosnak.
+    if (stayIssue) {
+      setError(stayIssue.message);
+      setStatus("idle");
+      return;
+    }
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
     setError(null);
-    setSubmitted(true);
+    setStatus("sending");
+
+    try {
+      const res = await fetch("/api/foglalas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          checkIn: keyOf(checkIn),
+          checkOut: keyOf(checkOut),
+          name: String(data.get("name") ?? ""),
+          email: String(data.get("email") ?? ""),
+          phone: String(data.get("phone") ?? ""),
+          guests: Number(data.get("guests") ?? 2),
+          pets: pets ? 1 : 0,
+          message: String(data.get("message") ?? ""),
+          company: String(data.get("company") ?? ""),
+        }),
+      });
+
+      if (res.ok) {
+        form.reset();
+        setStatus("success");
+        // Az új „függőben” állapot jelenjen meg azonnal a naptárban is.
+        fetch("/api/foglalas")
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: Availability | null) => d && setAvailability(d))
+          .catch(() => {});
+        return;
+      }
+
+      const body = await res.json().catch(() => null);
+      setError(
+        body?.error ??
+          "A foglalási igényt most nem sikerült elküldeni. Kérjük, próbálja meg később."
+      );
+      setStatus("error");
+      if (res.status === 409) {
+        // Időközben elkelt az időszak – frissítjük a naptárat és a választást.
+        setCheckIn(null);
+        setCheckOut(null);
+        fetch("/api/foglalas")
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: Availability | null) => d && setAvailability(d))
+          .catch(() => {});
+      }
+    } catch {
+      setError("A foglalási igényt most nem sikerült elküldeni. Kérjük, próbálja meg később.");
+      setStatus("error");
+    }
   }
 
   return (
@@ -181,31 +271,63 @@ export default function BookingSection() {
           subtitle="Válassza ki az érkezés és a távozás napját a naptárban, majd küldje el foglalási igényét. Munkatársunk hamarosan visszaigazolja."
         />
 
-        {/* Ár – ⚠️ HELYKITÖLTŐ (lásd PRICING a src/lib/site.ts-ben). */}
+        {/* Árak – lásd PRICING a src/lib/site.ts-ben. */}
         <AnimatedSection>
-          <div className="mt-10 mx-auto max-w-2xl glass-card rounded-3xl px-6 py-6 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-center sm:text-left">
-            <div className="sm:shrink-0">
-              <p className="text-[11px] uppercase tracking-wider text-mist/40 mb-1.5">
-                Ár / éjszaka
-              </p>
-              {PRICING.placeholder || !PRICING.perNight ? (
-                <span className="inline-flex items-center gap-2 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-sm font-medium text-amber-300">
-                  Ár megadása hamarosan
-                </span>
-              ) : (
-                <p className="font-heading text-3xl md:text-4xl font-semibold text-mist">
-                  {PRICING.perNight}
-                  {PRICING.deposit && (
-                    <span className="block mt-1 text-sm font-normal text-mist/55">
-                      Foglaló: {PRICING.deposit}
-                    </span>
-                  )}
-                </p>
-              )}
+          <div className="mt-10 mx-auto max-w-4xl glass-card rounded-3xl p-6 sm:p-8">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {PRICING.seasons.map((s) => (
+                <div key={s.id} className="rounded-2xl bg-white/[0.03] border border-white/5 p-5">
+                  <p className="text-[11px] uppercase tracking-wider text-pine-400/80 mb-1.5">
+                    {s.label}
+                  </p>
+                  <p className="font-heading text-2xl md:text-3xl font-semibold text-mist">
+                    {formatFt(s.pricePerNight)}
+                    <span className="text-sm font-normal text-mist/45"> / éj</span>
+                  </p>
+                  <p className="mt-2 text-xs text-mist/50 leading-relaxed">{s.period}</p>
+                </div>
+              ))}
             </div>
-            <p className="text-sm text-mist/55 leading-relaxed sm:border-l sm:border-white/10 sm:pl-6">
-              {PRICING.note}
-            </p>
+
+            <div className="mt-5 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-mist/60">
+              <p>
+                <span className="text-mist/85 font-medium">Minimum {PRICING.minNights} éjszaka.</span>{" "}
+                Az árak a teljes nyaralóra értendők.
+              </p>
+              <p>
+                <span className="text-mist/85 font-medium">Háziállat:</span> legfeljebb{" "}
+                {PRICING.pets.max}, {formatFt(PRICING.pets.feePerNight)}/éj felár ellenében.
+              </p>
+              <p>
+                <span className="text-mist/85 font-medium">Az ár tartalmazza:</span>{" "}
+                {PRICING.includes.join(", ")}.
+              </p>
+              <p>
+                <span className="text-mist/85 font-medium">Nem tartalmazza:</span>{" "}
+                {PRICING.excludes.join(", ")}.
+              </p>
+            </div>
+
+            <ul className="mt-5 space-y-2 border-t border-white/5 pt-5 text-xs text-mist/55 leading-relaxed">
+              {PRICING.conditions.map((c) => (
+                <li key={c.slice(0, 24)} className="flex gap-2">
+                  <span className="text-pine-400/70 shrink-0">•</span>
+                  {c}
+                </li>
+              ))}
+              <li className="flex gap-2">
+                <span className="text-pine-400/70 shrink-0">•</span>
+                Az ünnepnapokra kizárólag csomagban, főszezoni áron lehet foglalni:{" "}
+                {PRICING.holidayPackages
+                  .map((p) => `${p.label} (${formatHuDate(p.from)} – ${formatHuDate(p.to)})`)
+                  .join(" · ")}
+                .
+              </li>
+              <li className="flex gap-2">
+                <span className="text-pine-400/70 shrink-0">•</span>
+                {PRICING.validityNote}
+              </li>
+            </ul>
           </div>
         </AnimatedSection>
 
@@ -332,20 +454,62 @@ export default function BookingSection() {
                 </p>
               )}
 
-              {submitted ? (
+              {/* Foglalási szabály megsértése – a beküldés is tiltva. */}
+              {stayIssue && (
+                <div
+                  role="status"
+                  className="-mt-1 mb-5 rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-200"
+                >
+                  {stayIssue.message}
+                </div>
+              )}
+
+              {/* Tájékoztató árkalkuláció */}
+              {priceQuote && (
+                <div className="-mt-1 mb-5 rounded-xl bg-white/[0.03] border border-white/5 p-4">
+                  {priceQuote.holiday && (
+                    <p className="mb-2 text-[11px] uppercase tracking-wider text-pine-400/80">
+                      {priceQuote.holiday.label} csomag
+                    </p>
+                  )}
+                  <dl className="space-y-1.5 text-xs">
+                    {priceQuote.lines.map((l) => (
+                      <div key={l.label} className="flex items-baseline justify-between gap-3">
+                        <dt className="text-mist/55">
+                          {l.label} <span className="text-mist/35">({l.detail})</span>
+                        </dt>
+                        <dd className="text-mist/80 whitespace-nowrap">{formatFt(l.amount)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-white/5 pt-3">
+                    <span className="text-sm font-medium text-mist">Tájékoztató összesen</span>
+                    <span className="font-heading text-lg font-semibold text-pine-300 whitespace-nowrap">
+                      {formatFt(priceQuote.total)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-mist/45 leading-relaxed">
+                    {priceQuote.needsQuote
+                      ? "A választott időszak egy részére egyedi ajánlatot adunk – kérjük, küldje el az igényét."
+                      : `Az összeg nem tartalmazza ${PRICING.excludes.join(", ")}. A végleges árat visszaigazoláskor erősítjük meg.`}
+                  </p>
+                </div>
+              )}
+
+              {status === "success" ? (
                 <div className="rounded-2xl bg-pine-500/10 border border-pine-500/30 p-8 text-center">
                   <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-pine-500/20 text-pine-300 mb-4">
                     <CheckIcon className="w-7 h-7" />
                   </span>
                   <h3 className="font-heading text-xl text-mist mb-2">Köszönjük a foglalási igényt!</h3>
                   <p className="text-sm text-mist/55">
-                    Hamarosan felvesszük Önnel a kapcsolatot a megadott
-                    elérhetőségen a foglalás visszaigazolása érdekében.
+                    Visszaigazoló e-mailt küldtünk a megadott címre. Hamarosan
+                    jelentkezünk a foglalás véglegesítésével.
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      setSubmitted(false);
+                      setStatus("idle");
                       setCheckIn(null);
                       setCheckOut(null);
                     }}
@@ -355,42 +519,68 @@ export default function BookingSection() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <Field label="Név" htmlFor="b-name">
-                    <input id="b-name" name="name" type="text" required autoComplete="name" className={inputCls} placeholder="Teljes név" />
+                    <input id="b-name" name="name" type="text" required maxLength={BOOKING_LIMITS.name} autoComplete="name" className={inputCls} placeholder="Teljes név" />
                   </Field>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field label="E-mail" htmlFor="b-email">
-                      <input id="b-email" name="email" type="email" required autoComplete="email" className={inputCls} placeholder="pelda@email.hu" />
+                      <input id="b-email" name="email" type="email" required maxLength={BOOKING_LIMITS.email} autoComplete="email" className={inputCls} placeholder="pelda@email.hu" />
                     </Field>
                     <Field label="Telefon" htmlFor="b-phone">
-                      <input id="b-phone" name="phone" type="tel" autoComplete="tel" className={inputCls} placeholder="+36 …" />
+                      <input id="b-phone" name="phone" type="tel" maxLength={BOOKING_LIMITS.phone} autoComplete="tel" className={inputCls} placeholder="+36 …" />
                     </Field>
                   </div>
                   <Field label="Vendégek száma" htmlFor="b-guests">
                     <select id="b-guests" name="guests" className={inputCls} defaultValue="2">
-                      {[1, 2, 3, 4, 5, 6].map((n) => (
+                      {Array.from({ length: BOOKING_LIMITS.maxGuests }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n} className="bg-coal-850">
                           {n} fő
                         </option>
                       ))}
                     </select>
                   </Field>
+                  <label
+                    htmlFor="b-pets"
+                    className="flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/5 p-4 cursor-pointer"
+                  >
+                    <input
+                      id="b-pets"
+                      name="pets"
+                      type="checkbox"
+                      checked={pets}
+                      onChange={(e) => setPets(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-pine-500"
+                    />
+                    <span className="text-xs text-mist/70 leading-relaxed">
+                      Háziállatot hozok (legfeljebb {PRICING.pets.max}) –{" "}
+                      {formatFt(PRICING.pets.feePerNight)}/éj felár
+                    </span>
+                  </label>
+
                   <Field label="Megjegyzés" htmlFor="b-msg">
-                    <textarea id="b-msg" name="message" rows={3} className={inputCls} placeholder="Írja meg, hány fővel érkeznek, vagy ha van egyéb kérése…" />
+                    <textarea id="b-msg" name="message" rows={3} maxLength={BOOKING_LIMITS.message} className={inputCls} placeholder="Írja meg, hány fővel érkeznek, vagy ha van egyéb kérése…" />
                   </Field>
 
+                  {/* Honeypot: képernyőn kívül (nem sr-only, hogy a felolvasó se mondja ki),
+                      és nem disabled — a botok a disabled mezőket átugorják. */}
+                  <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
+                    <label htmlFor="b-company">Cég</label>
+                    <input type="text" id="b-company" name="company" tabIndex={-1} autoComplete="off" />
+                  </div>
+
                   {error && (
-                    <p className="text-sm text-rose-300" role="alert">
+                    <p className="rounded-xl border border-rose-400/25 bg-rose-500/10 p-4 text-sm text-rose-200" role="alert">
                       {error}
                     </p>
                   )}
 
                   <button
                     type="submit"
-                    className="w-full rounded-full bg-pine-500 px-6 py-3.5 text-sm font-semibold text-coal-950 hover:bg-pine-400 transition-colors"
+                    disabled={status === "sending" || stayIssue !== null}
+                    className="w-full rounded-full bg-pine-500 px-6 py-3.5 text-sm font-semibold text-coal-950 hover:bg-pine-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Foglalási igény elküldése
+                    {status === "sending" ? "Küldés…" : "Foglalási igény elküldése"}
                   </button>
                   <p className="text-[11px] text-mist/60 text-center leading-relaxed">
                     A gomb megnyomásával elfogadja az{" "}

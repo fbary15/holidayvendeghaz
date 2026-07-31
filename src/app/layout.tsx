@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, DM_Sans } from "next/font/google";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, CONTACT } from "@/lib/site";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_INDEXABLE, CONTACT } from "@/lib/site";
 import SmoothScroll from "@/components/SmoothScroll";
 import "./globals.css";
 
@@ -59,10 +59,11 @@ export const metadata: Metadata = {
     title: TITLE,
     description: SITE_DESCRIPTION,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  // Élesítésig (SITE_INDEXABLE) noindex – a robots.txt mellett fejlécszinten is,
+  // mert a robots.txt csak a bejárást tiltja, az indexelést nem mindig.
+  robots: SITE_INDEXABLE
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
