@@ -23,10 +23,6 @@ export default function AdatkezelesPage() {
       intro="Ez a tájékoztató bemutatja, hogyan kezeljük a weboldalunkon megadott személyes adatokat."
       lastUpdated="2026. július"
     >
-      <p className="legal-todo">
-        SABLON – jogi felülvizsgálat szükséges. Az alábbi szöveg minta; a végleges,
-        jogilag megfelelő tartalmat ügyvéddel egyeztetve kell véglegesíteni.
-      </p>
 
       <h2>1. Az adatkezelő</h2>
       <address>
@@ -78,10 +74,22 @@ export default function AdatkezelesPage() {
       </p>
 
       <h2>4. Az adatok tárolásának ideje</h2>
+      <ul>
+        <li>
+          <strong>Foglalási és kapcsolatfelvételi adatok:</strong> a foglalás, illetve a
+          megkeresés lezárását követő 1 évig.
+        </li>
+        <li>
+          <strong>Vendégkönyvi visszajelzések:</strong> a beérkezéstől számított 1 évig.
+        </li>
+        <li>
+          <strong>Számlázási adatok:</strong> a számvitelről szóló 2000. évi C. törvény
+          169. §-a alapján 8 évig.
+        </li>
+      </ul>
       <p>
-        A megadott adatokat a cél megvalósulásához szükséges ideig, de legfeljebb{" "}
-        <span className="legal-todo">[megőrzési idő – pl. a foglalást követő 1 év]</span>
-        {" "}kezeljük, kivéve, ha jogszabály ennél hosszabb megőrzést ír elő.
+        Az adatokat ezt megelőzően is töröljük, amint az adatkezelés célja megvalósult,
+        kivéve, ha jogszabály hosszabb megőrzést ír elő.
       </p>
 
       <h2>5. Adatfeldolgozók</h2>
@@ -89,14 +97,27 @@ export default function AdatkezelesPage() {
         A weboldal működéséhez az alábbi adatfeldolgozók szolgáltatásait vesszük igénybe:
       </p>
       <ul>
-        <li><strong>Tárhely- és domain-szolgáltató:</strong> <span className="legal-todo">[szolgáltató neve, székhelye]</span></li>
-        <li><strong>Foglalási naptár:</strong> Google Ireland Limited (Google Naptár) – a foglalási igények háttérkezeléséhez.</li>
         <li>
-          <strong>E-mail továbbítás (űrlapok):</strong> Resend, Inc. (székhely:{" "}
-          <span className="legal-todo">[székhely – kitöltendő]</span>) – a kapcsolatfelvételi
-          és vendégkönyv űrlapok e-mailben történő továbbításához.
+          <strong>Tárhelyszolgáltató:</strong> Vercel Inc. (Amerikai Egyesült Államok) – a
+          weboldal üzemeltetéséhez.
         </li>
-        <li><strong>E-mail postafiók szolgáltató:</strong> <span className="legal-todo">[szolgáltató neve]</span></li>
+        <li>
+          <strong>Domain- és DNS-szolgáltató:</strong> Rackhost Zrt. (Magyarország).
+        </li>
+        <li>
+          <strong>Foglalási naptár:</strong> Google Ireland Limited (Írország) – a foglalási
+          igények háttérkezeléséhez (Google Naptár).
+        </li>
+        <li>
+          <strong>E-mail továbbítás (űrlapok):</strong> Resend, Inc. (Amerikai Egyesült
+          Államok) – a kapcsolatfelvételi, foglalási és vendégkönyv űrlapok e-mailben történő
+          továbbításához. A levelek feldolgozása az Európai Unión belül, írországi régióban
+          történik.
+        </li>
+        <li>
+          <strong>E-mail postafiók:</strong> Google Ireland Limited (Írország) – a beérkező
+          üzenetek fogadásához (Gmail).
+        </li>
       </ul>
 
       <h2>6. Az érintett jogai</h2>

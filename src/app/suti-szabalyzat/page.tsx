@@ -21,10 +21,6 @@ export default function SutiSzabalyzatPage() {
       intro="Ez a szabályzat bemutatja, milyen sütiket használ a weboldal és milyen célból."
       lastUpdated="2026. július"
     >
-      <p className="legal-todo">
-        SABLON – jogi felülvizsgálat szükséges. A használt sütik pontos listáját a
-        végleges technikai beállítások alapján kell frissíteni.
-      </p>
 
       <h2>1. Mi az a süti?</h2>
       <p>

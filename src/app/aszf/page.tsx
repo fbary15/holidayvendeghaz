@@ -23,10 +23,6 @@ export default function AszfPage() {
       intro="A Holiday Vendégház szálláshely-szolgáltatásának igénybevételére vonatkozó általános feltételek."
       lastUpdated="2026. július"
     >
-      <p className="legal-todo">
-        SABLON – jogi felülvizsgálat szükséges. Az alábbi pontokat (árak, lemondási
-        feltételek, házirend) a Megbízó valós feltételeivel kell kitölteni.
-      </p>
 
       <h2>1. A szolgáltató</h2>
       <address>
