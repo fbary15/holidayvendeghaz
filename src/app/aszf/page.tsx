@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
-import { CONTACT, PRICING, formatFt } from "@/lib/site";
-import { formatHuDate } from "@/lib/booking";
+import { CONTACT, PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
+import { BOOKING_LIMITS, formatHuDate } from "@/lib/booking";
 
 export const metadata: Metadata = {
   title: "ÁSZF",
@@ -88,30 +88,60 @@ export default function AszfPage() {
         {PRICING.excludes.join(", ")}, amely a helyszínen fizetendő.
       </p>
       <p>
-        {PRICING.validityNote} Az első részlet mértékét, a fizetési módot és a fennmaradó összeg
-        megfizetésének határidejét a visszaigazolás tartalmazza.{" "}
-        <span className="legal-todo">
-          [első részlet mértéke (pl. a teljes díj 30%-a), fizetési mód és a fennmaradó összeg
-          határideje – kitöltendő]
-        </span>
+        {PRICING.validityNote} Az <strong>első részlet a foglalás teljes összegének{" "}
+        {PRICING.depositPercent}%-a</strong>, amelyről a szolgáltató a foglalási igény
+        beérkezésének napján előlegszámlát állít ki, és azt e-mailben megküldi. A foglalás
+        az előleg banki átutalással történő megfizetésével és a szolgáltató írásbeli
+        visszaigazolásával válik véglegessé.
+      </p>
+      <p>
+        A foglalót a visszaigazolástól számított {BOOKING_FLOW.depositDays} napon belül kell
+        banki átutalással megfizetni. A fennmaradó összeget a vendég a helyszínen, az
+        érkezéskor rendezi a tulajdonossal.
       </p>
 
       <h2>5. Lemondási feltételek</h2>
-      <p className="legal-todo">
-        [Lemondási és módosítási feltételek – pl. az érkezés előtt hány nappal díjmentes a
-        lemondás, ezt követően milyen díj terheli a vendéget.]
+      <p>
+        A foglalás <strong>az érkezés napját megelőző {BOOKING_FLOW.freeCancelDays}. napig
+        díjmentesen lemondható</strong>; ebben az esetben a befizetett foglalót
+        visszatérítjük.
+      </p>
+      <p>
+        Az érkezést megelőző {BOOKING_FLOW.freeCancelDays} napon belüli lemondás esetén a
+        befizetett foglaló összege a szolgáltatót illeti. A fennmaradó összeg ilyenkor sem
+        kerül kiszámlázásra.
+      </p>
+      <p>
+        Módosítási igényét kérjük, mielőbb jelezze a fenti elérhetőségek valamelyikén; a
+        módosítás lehetőségéről a szabad kapacitás függvényében tudunk nyilatkozni.
       </p>
 
       <h2>6. Érkezés és távozás</h2>
-      <p className="legal-todo">
-        [Bejelentkezés (check-in) és kijelentkezés (check-out) időpontjai, az átadás-átvétel
-        rendje.]
+      <p>
+        Érkezés az érkezés napján <strong>{BOOKING_FLOW.checkInFrom} órától</strong>, távozás
+        a távozás napján <strong>{BOOKING_FLOW.checkOutBy} óráig</strong>.
+      </p>
+      <p>
+        Kérjük, érkezés előtt körülbelül {BOOKING_FLOW.callBeforeHours} órával jelezze
+        telefonon az érkezését a{" "}
+        <a href={`tel:${CONTACT.phoneHref}`}>{CONTACT.phone}</a> számon, hogy a szálláshely
+        átadása zökkenőmentes legyen.
       </p>
 
       <h2>7. Házirend</h2>
+      <p>
+        A szálláshely legfeljebb <strong>{BOOKING_LIMITS.maxGuests} fő</strong> részére vehető
+        igénybe. Háziállat legfeljebb {PRICING.pets.max} hozható, a 4. pontban meghatározott
+        felár ellenében, előzetes jelzés alapján.
+      </p>
+      <p>
+        A részletes házirendet a szálláshelyen, jól látható helyen kifüggesztve helyeztük el,
+        és az érkezéskor átadás-átvételkor is ismertetjük. A vendég felelősséggel tartozik az
+        általa vagy a vele érkezők által okozott károkért.
+      </p>
       <p className="legal-todo">
-        [Házirend – pl. csendes pihenő ideje, dohányzás, háziállat, maximális létszám, a
-        vendég felelőssége az okozott károkért.]
+        [Kiegészítendő, ha a Megbízó további, a foglalási döntést befolyásoló szabályt kíván
+        közzétenni – pl. dohányzás, csendes pihenő ideje.]
       </p>
 
       <h2>8. Panaszkezelés és jogorvoslat</h2>

@@ -14,7 +14,6 @@ import { CONTACT } from "@/lib/site";
  */
 
 const { lat, lng } = CONTACT.geo;
-const QUERY = `${CONTACT.postalCode} ${CONTACT.city}, ${CONTACT.street}`;
 
 /** Kb. 1,5 km-es kivágat a ház köré. */
 const BBOX = [lng - 0.008, lat - 0.004, lng + 0.008, lat + 0.004]
@@ -22,7 +21,13 @@ const BBOX = [lng - 0.008, lat - 0.004, lng + 0.008, lat + 0.004]
   .join(",");
 
 const OSM_SRC = `https://www.openstreetmap.org/export/embed.html?bbox=${BBOX}&layer=mapnik&marker=${lat},${lng}`;
-const DIRECTIONS_HREF = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(QUERY)}`;
+
+/**
+ * Útvonaltervezéshez a Megbízó SAJÁT Google Maps linkjét használjuk – az a
+ * házra pontosan mutat. A beágyazott térkép jelölője ehhez képest utca-szintű,
+ * mert a 11-es házszám az OpenStreetMapben nincs felvéve.
+ */
+const DIRECTIONS_HREF = CONTACT.mapsUrl;
 
 export default function MapEmbed() {
   return (

@@ -43,8 +43,51 @@ export const CONTACT = {
   taxNumber: "52429501-1-24",
   /** Üzemeltető (szerződés szerint). */
   operator: "Kiss Tibor",
-  /** Hozzávetőleges földrajzi koordináták (Békésszentandrás, Siratói üdülősor). */
-  geo: { lat: 46.8686, lng: 20.4869 },
+  /**
+   * A „Sirató üdülőtelep” utca középpontja (OpenStreetMap). A 11-es házszám az
+   * OSM-ben nincs felvéve, ezért ez utca-szintű pontosság – a navigációhoz
+   * ezért a Megbízó saját Google Maps linkjét használjuk (`mapsUrl`).
+   */
+  geo: { lat: 46.8843, lng: 20.4686 },
+  /** A Megbízó által küldött pontos helymegjelölés (2026-07-31). */
+  mapsUrl: "https://maps.app.goo.gl/LnAVFbFJiVFLpJ6U6",
+} as const;
+
+/**
+ * A foglalás menete – a Megbízó tényleges folyamata szerint (a visszaigazoló és
+ * az előleg beérkezése után küldött e-mailjei alapján, 2026-07-31).
+ */
+export const BOOKING_FLOW = {
+  /** Ennyi napon belül kell átutalni a foglalót a visszaigazolás után. */
+  depositDays: 3,
+  /** Ennyi nappal az érkezés előttig díjmentes a lemondás. */
+  freeCancelDays: 30,
+  checkInFrom: "14:00",
+  checkOutBy: "10:00",
+  /** Érkezés előtt ennyivel kéri a telefonos jelzést. */
+  callBeforeHours: 1,
+  steps: [
+    {
+      title: "Foglalási igény",
+      text: "Kiválasztja az időpontot a naptárban, és elküldi a foglalási igényt. Erről azonnal visszajelzést kap e-mailben.",
+    },
+    {
+      title: "Árajánlat és foglaló",
+      text: "Elküldjük az árajánlatot, a foglaló összegét és a lemondási feltételeket. A foglaló a teljes összeg 30%-a, amelyet a visszaigazolástól számított 3 napon belül kérünk átutalni.",
+    },
+    {
+      title: "Előlegszámla",
+      text: "A foglalóról előlegszámlát állítunk ki, és e-mailben megküldjük.",
+    },
+    {
+      title: "Végleges foglalás",
+      text: "A foglaló beérkezése után a foglalás véglegessé válik, és elküldjük az érkezéshez szükséges információkat.",
+    },
+    {
+      title: "Érkezés",
+      text: "Érkezés 14:00-tól, távozás a távozás napján 10:00-ig. Érkezés előtt körülbelül egy órával kérjük, hívja a tulajdonost. A fennmaradó összeget a helyszínen rendezik.",
+    },
+  ],
 } as const;
 
 /**
@@ -123,6 +166,13 @@ export const PRICING = {
 
   includes: ["a hűtő-fűtő klímák használati díja", "a jakuzzi használati díja"],
   excludes: ["az idegenforgalmi adó"],
+
+  /**
+   * Foglaló (első részlet) – a Megbízó 2026-07-31-i válasza szerint mindig a
+   * foglalás teljes összegének 30%-a, amelyről a foglalási igény beérkezésének
+   * napján előlegszámlát állít ki és küld e-mailben.
+   */
+  depositPercent: 30,
 
   /** A foglalás érvényessé válásának feltétele (Megbízó megfogalmazása szerint). */
   validityNote:

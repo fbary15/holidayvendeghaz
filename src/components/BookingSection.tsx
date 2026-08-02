@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import SectionHeading from "./SectionHeading";
 import AnimatedSection from "./AnimatedSection";
 import { CheckIcon } from "./Icons";
-import { PRICING, formatFt } from "@/lib/site";
+import { PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
 import {
   BOOKING_LIMITS,
   formatHuDate,
@@ -293,6 +293,10 @@ export default function BookingSection() {
               <p>
                 <span className="text-mist/85 font-medium">Minimum {PRICING.minNights} éjszaka.</span>{" "}
                 Az árak a teljes nyaralóra értendők.
+              </p>
+              <p>
+                <span className="text-mist/85 font-medium">Foglaló:</span> a teljes összeg{" "}
+                {PRICING.depositPercent}%-a, amelyről előlegszámlát küldünk.
               </p>
               <p>
                 <span className="text-mist/85 font-medium">Háziállat:</span> legfeljebb{" "}
@@ -591,6 +595,43 @@ export default function BookingSection() {
             </div>
           </AnimatedSection>
         </div>
+
+        {/* A foglalás menete – hogy a vendég előre lássa, mi következik. */}
+        <AnimatedSection delay={0.15}>
+          <div className="mt-12 glass-card rounded-3xl p-6 sm:p-8">
+            <h3 className="font-heading text-xl md:text-2xl text-mist mb-1">
+              Mi történik a beküldés után?
+            </h3>
+            <p className="text-sm text-mist/50 mb-7">
+              A foglalási igény beküldése még nem végleges foglalás – így zajlik a folyamat:
+            </p>
+
+            <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {BOOKING_FLOW.steps.map((step, i) => (
+                <li
+                  key={step.title}
+                  className="rounded-2xl bg-white/[0.03] border border-white/5 p-5"
+                >
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-pine-500/15 text-pine-300 text-xs font-semibold mb-3">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm font-medium text-mist mb-1.5">{step.title}</p>
+                  <p className="text-xs text-mist/55 leading-relaxed">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+
+            <p className="mt-6 text-xs text-mist/45 leading-relaxed border-t border-white/5 pt-5">
+              A foglalás az érkezés napját megelőző {BOOKING_FLOW.freeCancelDays}. napig
+              díjmentesen lemondható. Ezt követő lemondás esetén a befizetett foglaló a
+              szálláshelyet illeti. Részletek az{" "}
+              <a href="/aszf" className="text-pine-300 hover:underline">
+                ÁSZF-ben
+              </a>
+              .
+            </p>
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );
