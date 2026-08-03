@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, DM_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_INDEXABLE, CONTACT } from "@/lib/site";
 import SmoothScroll from "@/components/SmoothScroll";
 import "./globals.css";
@@ -134,6 +135,14 @@ export default function RootLayout({
         />
         <SmoothScroll />
         {children}
+        {/*
+          Látogatottság-mérés (fejlesztési szerződés 10.1.). Vercel Web Analytics:
+          süti nélkül működik, ezért nem igényel hozzájárulást, és nem hoz be új
+          adatfeldolgozót – a Vercel amúgy is a tárhelyszolgáltató. A szkript
+          saját domainről (`/_vercel/insights/…`) töltődik, így a CSP-t sem kell
+          lazítani.
+        */}
+        <Analytics />
       </body>
     </html>
   );

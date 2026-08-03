@@ -98,8 +98,10 @@ export default function AdatkezelesPage() {
       </p>
       <ul>
         <li>
-          <strong>Tárhelyszolgáltató:</strong> Vercel Inc. (Amerikai Egyesült Államok) – a
-          weboldal üzemeltetéséhez.
+          <strong>Tárhelyszolgáltató és látogatottság-mérés:</strong> Vercel Inc. (Amerikai
+          Egyesült Államok) – a weboldal üzemeltetéséhez, valamint süti nélküli, összesített
+          látogatottsági statisztikához (Vercel Web Analytics). A mérés nem helyez el sütit,
+          és nem alkalmas az egyes látogatók azonosítására.
         </li>
         <li>
           <strong>Domain- és DNS-szolgáltató:</strong> Rackhost Zrt. (Magyarország).

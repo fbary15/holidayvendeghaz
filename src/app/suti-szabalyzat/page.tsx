@@ -43,10 +43,20 @@ export default function SutiSzabalyzatPage() {
 
       <h3>Statisztikai / mérő sütik</h3>
       <p>
-        <strong>Jelenleg nem használunk</strong> statisztikai, mérő- vagy marketingsütiket,
-        és harmadik fél mérőszolgáltatását sem vesszük igénybe. Ha a későbbiekben ilyet
-        vezetünk be, azok kizárólag a látogató kifejezett hozzájárulásával aktiválódnak, és
-        a szolgáltató nevét ebben a szabályzatban feltüntetjük.
+        <strong>Statisztikai, mérő- vagy marketingsütiket nem használunk.</strong>
+      </p>
+      <p>
+        A weboldal látogatottságát <strong>süti nélküli (cookieless) méréssel</strong>
+        követjük, a Vercel Web Analytics szolgáltatásával. Ez a megoldás nem helyez el sütit
+        a böngészőjében, nem hoz létre azonosítót, és nem követi Önt más weboldalakon.
+        Kizárólag összesített adatokat rögzít – például hogy egy oldalt hányan néztek meg –,
+        amelyekből egyetlen látogató sem azonosítható.
+      </p>
+      <p>
+        Mivel ez a mérés nem használ sütit és nem jár személyes adat kezelésével, nem
+        igényel hozzájárulást. Ha a későbbiekben sütit használó mérő- vagy marketingeszközt
+        vezetünk be, az kizárólag az Ön kifejezett hozzájárulásával aktiválódik, és a
+        szolgáltató nevét itt feltüntetjük.
       </p>
 
       <h2>3. A sütik kezelése</h2>
