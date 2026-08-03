@@ -135,10 +135,6 @@ export default function AszfPage() {
         és az érkezéskor átadás-átvételkor is ismertetjük. A vendég felelősséggel tartozik az
         általa vagy a vele érkezők által okozott károkért.
       </p>
-      <p className="legal-todo">
-        [Kiegészítendő, ha a Megbízó további, a foglalási döntést befolyásoló szabályt kíván
-        közzétenni – pl. dohányzás, csendes pihenő ideje.]
-      </p>
 
       <h2>8. Panaszkezelés és jogorvoslat</h2>
       <p>

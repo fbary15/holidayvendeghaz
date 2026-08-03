@@ -11,10 +11,11 @@ export const metadata: Metadata = {
 };
 
 /*
- * ⚠️ SABLON – jogi felülvizsgálat szükséges.
- * A szerződés X. pontja szerint az adatkezelés jogi megfelelőségéért kizárólag a
- * Megbízó felel; nyomatékosan javasolt a szöveg ügyvéddel való átnézetése.
- * A sárgával jelölt [placeholder] részeket élesítés előtt ki kell tölteni.
+ * A tartalom a Megbízó valós adataival és feltételeivel van feltöltve.
+ *
+ * ⚠️ A szerződés 10.2–10.3. pontja szerint az adatkezelés jogi megfelelőségéért
+ * kizárólag a Megbízó felel, és a Vállalkozó nyomatékosan javasolja a szöveg
+ * ügyvéddel való átnézetését. A Vállalkozó jogi tanácsadást nem nyújt.
  */
 export default function AdatkezelesPage() {
   return (

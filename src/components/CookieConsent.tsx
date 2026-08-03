@@ -6,9 +6,14 @@ import { AnimatePresence, motion } from "framer-motion";
 
 /*
  * Cookie-hozzájárulás (consent banner) – a szerződés III. (GDPR & Cookie) pontja
- * szerint. A döntést localStorage-ban tároljuk. A tényleges mérő/analitikai
- * sütiket csak elfogadás után szabad betölteni (ide köthető be később az
- * analitika inicializálása).
+ * szerint. A döntést localStorage-ban tároljuk.
+ *
+ * Jelenleg CSAK feltétlenül szükséges süti van az oldalon (maga ez a tárolt
+ * döntés). A látogatottság-mérés a Vercel Web Analytics süti nélküli
+ * megoldásával történik, ami nem igényel hozzájárulást, ezért nem is függ ettől
+ * a bannertől. Ha később sütit használó mérő- vagy marketingeszköz kerül be,
+ * annak indítása a `decide("accepted")` ágba köthető, és a süti szabályzatot is
+ * frissíteni kell.
  *
  * ⚠️ A süti- és adatkezelési megfelelőségért a szerződés X. pontja szerint a
  * Megbízó felel; javasolt ügyvédi átnézés.
@@ -35,7 +40,6 @@ export default function CookieConsent() {
       /* localStorage nem elérhető – csendben elrejtjük a bannert */
     }
     setVisible(false);
-    // TODO: elfogadás esetén itt indítható a mérő/analitikai szkript.
   }
 
   return (
