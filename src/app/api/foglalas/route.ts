@@ -142,7 +142,9 @@ function validate(body: Record<string, unknown>): Validated {
   if (hardLimit && inDate > hardLimit) {
     return {
       ok: false,
-      error: `Jelenleg ${formatHuDate(BOOKING_LIMITS.lastCheckIn!)} napjáig fogadunk foglalást. Későbbi időpontért kérjük, keressen minket közvetlenül.`,
+      error:
+        "Erre az időszakra még nem tudunk foglalást fogadni. Köszönjük a megértését! " +
+        "Ha mégis ekkorra tervez, kérjük, keressen minket telefonon vagy e-mailben – szívesen segítünk.",
     };
   }
 

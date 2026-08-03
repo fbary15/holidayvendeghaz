@@ -476,12 +476,13 @@ export default function BookingSection() {
 
               {BOOKING_LIMITS.lastCheckIn && (
                 <p className="mt-3 text-xs text-mist/45 leading-relaxed">
-                  Jelenleg {formatHuDate(BOOKING_LIMITS.lastCheckIn)} napjáig fogadunk
-                  érkezést. Későbbi időpontért kérjük,{" "}
+                  Jelenleg {formatHuDate(BOOKING_LIMITS.lastCheckIn)} napjáig tudunk
+                  foglalást fogadni. A későbbi időpontokra még nem nyitottuk meg a naptárat –
+                  köszönjük a megértését! Ha mégis ekkorra tervez,{" "}
                   <a href="#kapcsolat" className="text-pine-300 hover:underline">
                     keressen minket
                   </a>
-                  .
+                  , szívesen segítünk.
                 </p>
               )}
             </div>
