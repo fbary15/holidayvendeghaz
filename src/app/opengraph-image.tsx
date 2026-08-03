@@ -1,10 +1,24 @@
 import { ImageResponse } from "next/og";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { SITE_NAME, CONTACT } from "@/lib/site";
 
-// Dinamikusan generált Open Graph kép (1200×630 PNG) – matt fekete + zöld.
+/**
+ * Open Graph kép (1200×630) – ez jelenik meg, ha valaki megosztja az oldalt
+ * Facebookon, Messengerben, WhatsAppon vagy Viberen.
+ *
+ * A háttér a nyaraló valódi fotója (`og-hatter.jpg`), amit a galéria
+ * `img_1981.jpg` képéből vágtunk 1200×630-ra. Szálláshelynél a fotó lényegesen
+ * többet ad el, mint egy feliratos kártya. A sötét átmenet csak annyira erős,
+ * hogy a szöveg biztosan olvasható maradjon a világos égen és a füvön is.
+ */
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Holiday Vendégház – Békésszentandrás";
+export const alt = `${SITE_NAME} – ${CONTACT.city}`;
+
+// Build időben olvassuk be; a Satori csak beágyazott (data URI) képet fogad el.
+const hatter = readFileSync(join(process.cwd(), "src/app/og-hatter.jpg"));
+const HATTER_URI = `data:image/jpeg;base64,${hatter.toString("base64")}`;
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -14,63 +28,97 @@ export default function OpengraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background:
-            "radial-gradient(120% 120% at 15% 10%, #0f4a31 0%, #08090a 55%)",
-          padding: "72px 80px",
+          position: "relative",
           fontFamily: "sans-serif",
         }}
       >
-        {/* House mark */}
-        <svg width="120" height="120" viewBox="0 0 100 100" fill="none">
-          <path
-            d="M24 86 V44 L50 22 L76 44"
-            stroke="#38cf7d"
-            strokeWidth="5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M24 86 H72"
-            stroke="#38cf7d"
-            strokeWidth="5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M39 86 V58"
-            stroke="#38cf7d"
-            strokeWidth="5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HATTER_URI}
+          alt=""
+          width={size.width}
+          height={size.height}
+          style={{ position: "absolute", top: 0, left: 0, objectFit: "cover" }}
+        />
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              fontSize: 30,
-              letterSpacing: 8,
-              textTransform: "uppercase",
-              color: "#38cf7d",
-              marginBottom: 18,
-            }}
-          >
-            {CONTACT.city}
+        {/*
+          Sötét átmenet, hogy a felirat a világos égen és füvön is olvasható
+          maradjon. FONTOS: a Satori nem támogatja az `inset` rövidítést –
+          explicit width/height kell, különben a réteg némán kimarad.
+        */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: `${size.width}px`,
+            height: `${size.height}px`,
+            display: "flex",
+            background:
+              "linear-gradient(180deg, rgba(6,10,8,0.10) 0%, rgba(6,10,8,0.10) 30%, rgba(6,10,8,0.72) 62%, rgba(6,10,8,0.95) 100%)",
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            left: 72,
+            right: 72,
+            bottom: 62,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
+            <svg width="52" height="52" viewBox="0 0 100 100" fill="none">
+              <path
+                d="M24 86 V44 L50 22 L76 44"
+                stroke="#38cf7d"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M24 86 H72"
+                stroke="#38cf7d"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M39 86 V58"
+                stroke="#38cf7d"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <div
+              style={{
+                fontSize: 27,
+                letterSpacing: 8,
+                textTransform: "uppercase",
+                color: "#5ae09a",
+                marginLeft: 18,
+              }}
+            >
+              {CONTACT.city}
+            </div>
           </div>
+
           <div
             style={{
-              fontSize: 92,
+              fontSize: 88,
               fontWeight: 700,
-              color: "#eef4ef",
-              lineHeight: 1.05,
+              color: "#ffffff",
+              lineHeight: 1.02,
             }}
           >
             {SITE_NAME}
           </div>
-          <div style={{ fontSize: 34, color: "#c3ccc5", marginTop: 24 }}>
-            {CONTACT.addressShort}
+
+          <div style={{ fontSize: 32, color: "#dfe7e1", marginTop: 20 }}>
+            Jakuzzi · medence · saját stég a Körös-holtágon
           </div>
         </div>
       </div>
