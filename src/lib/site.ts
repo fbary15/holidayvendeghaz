@@ -160,8 +160,13 @@ export const PRICING = {
    * tulajdonos igazolja vissza), de a vendégnek meg kell jelennie:
    */
   conditions: [
-    "Április 30-ig, legfeljebb 2 fő érkezése esetén, vasárnap–csütörtök közötti foglalás kedvezményesen: 35.000 Ft/nyaraló/éj.",
     "Főszezonban a két foglalás közé beszorult, kimaradt 2 éjszaka is foglalható: 85.000 Ft/nyaraló/éj.",
+    // A Megbízó „április 30-ig, max. 2 fő, vasárnap–csütörtök: 35.000 Ft/éj”
+    // kedvezménye szándékosan NEM szerepel: 2026. április 30. már elmúlt, tehát
+    // nem igényelhető, és feltételként kiírva félrevezető lenne. A Megbízó
+    // 2026-08-03-án pontosította, hogy a TARTÓZKODÁS időpontja számít – így a
+    // 2027-es árak megérkezésekor már automatikus árszámítással beköthető:
+    // tartózkodás vége ≤ 04-30, legfeljebb 2 fő, minden éjszaka vasárnap–szerda.
   ],
 
   includes: ["a hűtő-fűtő klímák használati díja", "a jakuzzi használati díja"],

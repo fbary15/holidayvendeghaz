@@ -54,9 +54,9 @@ export default function CookieConsent() {
           <div className="max-w-4xl mx-auto glass-card rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5 shadow-2xl shadow-black/50 bg-coal-900/95">
             <div className="flex-1">
               <p className="text-sm text-mist/70 leading-relaxed">
-                Weboldalunk sütiket használ a működéshez és a látogatottság méréséhez.
-                A böngészés folytatásával, illetve az „Elfogadom” gombra kattintva
-                hozzájárul ezek használatához. Részletek a{" "}
+                Weboldalunk a működéséhez feltétlenül szükséges sütiket használ.
+                Mérő- vagy marketingsütiket csak az Ön hozzájárulásával helyeznénk el –
+                jelenleg ilyeneket nem alkalmazunk. Részletek a{" "}
                 <Link href="/suti-szabalyzat" className="text-pine-300 hover:underline">
                   süti szabályzatban
                 </Link>

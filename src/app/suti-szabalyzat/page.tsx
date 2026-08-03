@@ -43,8 +43,10 @@ export default function SutiSzabalyzatPage() {
 
       <h3>Statisztikai / mérő sütik</h3>
       <p>
-        Ezek a látogatottság méréséhez használatosak, és csak a látogató hozzájárulásával
-        aktiválódnak. <span className="legal-todo">[a mérőszolgáltató és sütijeinek megnevezése – pl. Google Analytics, ha bekötésre kerül]</span>
+        <strong>Jelenleg nem használunk</strong> statisztikai, mérő- vagy marketingsütiket,
+        és harmadik fél mérőszolgáltatását sem vesszük igénybe. Ha a későbbiekben ilyet
+        vezetünk be, azok kizárólag a látogató kifejezett hozzájárulásával aktiválódnak, és
+        a szolgáltató nevét ebben a szabályzatban feltüntetjük.
       </p>
 
       <h2>3. A sütik kezelése</h2>
