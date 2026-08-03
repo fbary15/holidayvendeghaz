@@ -60,9 +60,6 @@ export default function SutiSzabalyzatPage() {
         <a href="/adatkezeles">adatkezelési tájékoztatóban</a> olvashat.
       </p>
 
-      <p className="legal-todo">
-        Ez a szöveg tájékoztató jellegű sablon, és nem minősül jogi tanácsadásnak.
-      </p>
     </LegalPage>
   );
 }

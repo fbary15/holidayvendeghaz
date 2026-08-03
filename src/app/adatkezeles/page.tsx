@@ -134,9 +134,6 @@ export default function AdatkezelesPage() {
         <a href="https://naih.hu" target="_blank" rel="noopener noreferrer">naih.hu</a>.
       </p>
 
-      <p className="legal-todo">
-        Ez a szöveg tájékoztató jellegű sablon, és nem minősül jogi tanácsadásnak.
-      </p>
     </LegalPage>
   );
 }

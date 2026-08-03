@@ -146,9 +146,6 @@ export default function AszfPage() {
         rendezéséhez a lakóhely szerint illetékes békéltető testülethez lehet fordulni.
       </p>
 
-      <p className="legal-todo">
-        Ez a szöveg tájékoztató jellegű sablon, és nem minősül jogi tanácsadásnak.
-      </p>
     </LegalPage>
   );
 }
