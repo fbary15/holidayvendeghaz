@@ -11,6 +11,19 @@ export const BOOKING_LIMITS = {
   message: 2000,
   /** Legfeljebb ennyi hónapra előre lehet foglalni. */
   monthsAhead: 12,
+  /**
+   * Az utolsó nap, amelyre ÉRKEZÉS foglalható (`YYYY-MM-DD`), vagy `null`, ha
+   * csak a `monthsAhead` korlátoz.
+   *
+   * A Megbízó 2026-08-03-án kérte, hogy egyelőre csak 2026-ra lehessen
+   * foglalni, mert a 2027-es árakat még nem határozta meg. A korlát
+   * szándékosan az ÉRKEZÉSRE vonatkozik: így a szilveszteri csomag
+   * (érkezés 2026-12-31, távozás 2027-01-03) még foglalható marad.
+   *
+   * A 2027-es árak és ünnepi időpontok megérkezésekor ezt kell kitolni vagy
+   * `null`-ra állítani – és a PRICING.holidayPackages listát is bővíteni.
+   */
+  lastCheckIn: "2026-12-31" as string | null,
   /** Max éjszaka egy igényben – nyilvánvaló elgépelés/visszaélés kiszűrésére. */
   maxNights: 60,
   /** Max vendégszám (3 hálószoba, 6 fő). */

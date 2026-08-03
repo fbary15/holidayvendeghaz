@@ -8,6 +8,7 @@ import { PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
 import {
   BOOKING_LIMITS,
   formatHuDate,
+  fromISODate,
   toISODate,
   type Availability,
   type BookingStatus,
@@ -115,6 +116,8 @@ export default function BookingSection() {
   function handleSelect(d: Date) {
     const s = statusOf(d);
     if (s !== "free") return;
+    // A záró napon túl csak távozást lehet választni, érkezést nem.
+    if (beyondWindow(d) && !awaitingCheckOut) return;
     setStatus("idle");
     setError(null);
 
@@ -147,6 +150,22 @@ export default function BookingSection() {
       ? Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000)
       : 0;
 
+  /**
+   * Meddig fogadunk ÉRKEZÉST. A korláton túli napok érkezésnek nem
+   * választhatók, távozásnak viszont igen – különben a szilveszteri csomag
+   * (érkezés 12-31, távozás 01-03) foglalhatatlan lenne.
+   */
+  const lastCheckInDate = useMemo(
+    () => (BOOKING_LIMITS.lastCheckIn ? fromISODate(BOOKING_LIMITS.lastCheckIn) : null),
+    []
+  );
+  /** Épp távozási dátumot várunk? */
+  const awaitingCheckOut = checkIn !== null && checkOut === null;
+
+  function beyondWindow(d: Date) {
+    return lastCheckInDate !== null && d.getTime() > lastCheckInDate.getTime();
+  }
+
   /** Foglalt + függő napok együtt – a „kimaradt 2 éjszaka” szabályhoz kell. */
   const unavailable = useMemo(
     () => new Set([...bookedSet, ...pendingSet]),
@@ -172,6 +191,12 @@ export default function BookingSection() {
   const canGoPrev =
     view.year > today.getFullYear() ||
     (view.year === today.getFullYear() && view.month > today.getMonth());
+
+  // A záró nap hónapja után még egy hónapot engedünk, hogy az azon átnyúló
+  // foglalás távozási napja is elérhető legyen a naptárban.
+  const canGoNext =
+    lastCheckInDate === null ||
+    view.year * 12 + view.month < lastCheckInDate.getFullYear() * 12 + lastCheckInDate.getMonth() + 1;
 
   function shiftMonth(delta: number) {
     setView((v) => {
@@ -356,8 +381,9 @@ export default function BookingSection() {
                 <button
                   type="button"
                   onClick={() => shiftMonth(1)}
+                  disabled={!canGoNext}
                   aria-label="Következő hónap"
-                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors"
+                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-mist/70 hover:text-mist hover:border-pine-400/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
                 </button>
@@ -386,7 +412,9 @@ export default function BookingSection() {
                     const isOut = sameDay(d, checkOut);
                     const isEdge = isIn || isOut;
                     const isBetween = inRange(d);
-                    const selectable = s === "free";
+                    // A záró napon túli nap csak távozásnak választható.
+                    const zart = beyondWindow(d) && !awaitingCheckOut;
+                    const selectable = s === "free" && !zart;
 
                     let cls =
                       "relative aspect-square rounded-lg text-sm flex items-center justify-center transition-colors ";
@@ -400,6 +428,8 @@ export default function BookingSection() {
                       cls += "text-rose-300/80 bg-rose-500/5 cursor-not-allowed line-through ";
                     } else if (s === "pending") {
                       cls += "text-amber-300/80 bg-amber-500/10 cursor-not-allowed ";
+                    } else if (zart) {
+                      cls += "text-mist/20 cursor-not-allowed ";
                     } else {
                       cls += "text-mist/80 hover:bg-pine-500/15 hover:text-pine-100 cursor-pointer ";
                     }
@@ -412,7 +442,15 @@ export default function BookingSection() {
                         disabled={!selectable}
                         aria-pressed={isEdge}
                         aria-label={`${formatHu(d)} – ${
-                          s === "free" ? "szabad" : s === "booked" ? "foglalt" : s === "pending" ? "függőben" : "elmúlt"
+                          s === "booked"
+                            ? "foglalt"
+                            : s === "pending"
+                              ? "függőben"
+                              : s === "past"
+                                ? "elmúlt"
+                                : zart
+                                  ? "jelenleg nem foglalható"
+                                  : "szabad"
                         }`}
                         className={cls}
                       >
@@ -435,6 +473,17 @@ export default function BookingSection() {
                   <span className="w-3 h-3 rounded-full bg-rose-500/50" /> Foglalt
                 </span>
               </div>
+
+              {BOOKING_LIMITS.lastCheckIn && (
+                <p className="mt-3 text-xs text-mist/45 leading-relaxed">
+                  Jelenleg {formatHuDate(BOOKING_LIMITS.lastCheckIn)} napjáig fogadunk
+                  érkezést. Későbbi időpontért kérjük,{" "}
+                  <a href="#kapcsolat" className="text-pine-300 hover:underline">
+                    keressen minket
+                  </a>
+                  .
+                </p>
+              )}
             </div>
           </AnimatedSection>
 

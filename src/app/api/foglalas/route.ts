@@ -66,11 +66,22 @@ export async function GET() {
   }
 
   const from = today();
-  const to = new Date(from.getFullYear(), from.getMonth() + BOOKING_LIMITS.monthsAhead, 1);
+  const rolling = new Date(from.getFullYear(), from.getMonth() + BOOKING_LIMITS.monthsAhead, 1);
+  // A záró dátumon túl is kérünk pár napot, hogy az utolsó nappal kezdődő
+  // foglalás (pl. a szilveszteri csomag) elfoglalt napjai is látszódjanak.
+  const hardLimit = BOOKING_LIMITS.lastCheckIn ? fromISODate(BOOKING_LIMITS.lastCheckIn) : null;
+  const to =
+    hardLimit && hardLimit < rolling
+      ? new Date(hardLimit.getFullYear(), hardLimit.getMonth(), hardLimit.getDate() + 14)
+      : rolling;
 
   try {
     const availability = await getAvailability(toISODate(from), toISODate(to));
-    return Response.json({ ...availability, configured: true });
+    return Response.json({
+      ...availability,
+      configured: true,
+      lastCheckIn: BOOKING_LIMITS.lastCheckIn,
+    });
   } catch (err) {
     console.error("[api/foglalas] elérhetőség lekérése sikertelen:", err);
     return Response.json(
@@ -123,6 +134,16 @@ function validate(body: Record<string, unknown>): Validated {
   if (nights < 1) return { ok: false, error: "A távozás dátuma legyen későbbi az érkezésnél." };
   if (nights > BOOKING_LIMITS.maxNights) {
     return { ok: false, error: `Legfeljebb ${BOOKING_LIMITS.maxNights} éjszaka foglalható egyszerre.` };
+  }
+
+  // Kemény zárónap (ha van): eddig a napig fogadunk ÉRKEZÉST. A távozás
+  // átnyúlhat rajta – így a szilveszteri csomag is foglalható marad.
+  const hardLimit = BOOKING_LIMITS.lastCheckIn ? fromISODate(BOOKING_LIMITS.lastCheckIn) : null;
+  if (hardLimit && inDate > hardLimit) {
+    return {
+      ok: false,
+      error: `Jelenleg ${formatHuDate(BOOKING_LIMITS.lastCheckIn!)} napjáig fogadunk foglalást. Későbbi időpontért kérjük, keressen minket közvetlenül.`,
+    };
   }
 
   const limit = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate());
