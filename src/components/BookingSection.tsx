@@ -13,7 +13,7 @@ import {
   type Availability,
   type BookingStatus,
 } from "@/lib/booking";
-import { quote, validateStay } from "@/lib/pricing";
+import { holidayFor, quote, validateStay } from "@/lib/pricing";
 
 /*
  * FOGLALÁSI RENDSZER – UI
@@ -116,10 +116,26 @@ export default function BookingSection() {
   function handleSelect(d: Date) {
     const s = statusOf(d);
     if (s !== "free") return;
-    // A záró napon túl csak távozást lehet választni, érkezést nem.
-    if (beyondWindow(d) && !awaitingCheckOut) return;
     setStatus("idle");
     setError(null);
+
+    // Ünnepnapra kizárólag a teljes csomag foglalható, ezért egyetlen
+    // kattintással a teljes csomagot jelöljük ki – akármelyik napjára kattint.
+    // Enélkül a vendégnek magának kellene kitalálnia a csomag záró napját, a
+    // szilveszterinél ráadásul a következő évben.
+    const csomag = holidayFor(keyOf(d));
+    if (csomag) {
+      const tol = fromISODate(csomag.from);
+      const ig = fromISODate(csomag.to);
+      if (tol && ig) {
+        setCheckIn(tol);
+        setCheckOut(ig);
+        return;
+      }
+    }
+
+    // A záró napon túl csak távozást lehet választani, érkezést nem.
+    if (beyondWindow(d) && !awaitingCheckOut) return;
 
     if (!checkIn || (checkIn && checkOut)) {
       setCheckIn(d);
@@ -412,8 +428,11 @@ export default function BookingSection() {
                     const isOut = sameDay(d, checkOut);
                     const isEdge = isIn || isOut;
                     const isBetween = inRange(d);
-                    // A záró napon túli nap csak távozásnak választható.
-                    const zart = beyondWindow(d) && !awaitingCheckOut;
+                    // Az ünnepi csomag napjai a záró napon túl is választhatók:
+                    // kattintásra a teljes csomag jelölődik ki, amelynek az
+                    // érkezése még a nyitott időszakba esik.
+                    const csomagNap = holidayFor(keyOf(d)) !== null;
+                    const zart = beyondWindow(d) && !awaitingCheckOut && !csomagNap;
                     const selectable = s === "free" && !zart;
 
                     let cls =
