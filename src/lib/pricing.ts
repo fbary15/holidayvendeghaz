@@ -56,18 +56,24 @@ export function validateStay(
   const nights = nightsBetween(checkIn, checkOut);
   if (nights < 1) return { code: "range", message: "A távozás dátuma legyen későbbi az érkezésnél." };
 
-  // 1) Ünnepnapokra csak a teljes csomag foglalható.
-  const touched = daysBetween(checkIn, checkOut)
-    .map(holidayFor)
-    .filter((p): p is HolidayPackage => p !== null);
-  if (touched.length > 0 && !exactHolidayPackage(checkIn, checkOut)) {
-    const names = [...new Set(touched.map((p) => p.label))].join(", ");
-    const list = [...new Set(touched)]
+  // 1) Ünnepnapoknál a csomagot HIÁNYTALANUL tartalmaznia kell a foglalásnak.
+  //    A Megbízó 2026-08-05-i kérése szerint a csomag elé vagy mögé nyúlhat a
+  //    tartózkodás, csak megcsonkítani nem lehet.
+  const touched = [
+    ...new Set(
+      daysBetween(checkIn, checkOut)
+        .map(holidayFor)
+        .filter((p): p is HolidayPackage => p !== null)
+    ),
+  ];
+  const csonka = touched.filter((p) => checkIn > p.from || checkOut < p.to);
+  if (csonka.length > 0) {
+    const list = csonka
       .map((p) => `${p.label}: ${formatHuDate(p.from)} – ${formatHuDate(p.to)}`)
       .join(" · ");
     return {
       code: "holidayPartial",
-      message: `A választott időszak ünnepnapot érint (${names}), amelyre kizárólag a teljes csomag foglalható. Foglalható időszak – ${list}`,
+      message: `A választott időszak ünnepnapot érint, amelyre csak a teljes csomaggal együtt lehet foglalni – ${list}. A csomag elé vagy után nyugodtan hosszabbíthatja a tartózkodást.`,
     };
   }
 
@@ -139,7 +145,7 @@ export function quote(
   if (nights < 1) return null;
 
   const days = daysBetween(checkIn, checkOut);
-  const holiday = exactHolidayPackage(checkIn, checkOut);
+  const holiday = exactHolidayPackage(checkIn, checkOut) ?? holidayFor(checkIn);
   const lines: QuoteLine[] = [];
   let needsQuote = false;
 
@@ -149,16 +155,18 @@ export function quote(
       detail: `${nights} éj × ${formatFt(PRICING.gapFill.pricePerNight)}`,
       amount: nights * PRICING.gapFill.pricePerNight,
     });
-  } else if (holiday) {
-    lines.push({
-      label: `${holiday.label} csomag`,
-      detail: `${nights} éj × ${formatFt(PRICING.holidayPricePerNight)}`,
-      amount: nights * PRICING.holidayPricePerNight,
-    });
   } else {
-    // Szezononként összevonva, hogy a bontás olvasható maradjon.
+    // Éjszakánként árazunk: az ünnepi csomag napjai főszezoni áron, a csomag
+    // elé/mögé nyúló éjszakák a saját szezonáruk szerint. Így a Megbízó által
+    // kért „csomag + hosszabbítás” eset is helyesen jön ki.
+    const csomagEjek = new Map<string, number>();
     const bySeason = new Map<string, { season: Season; nights: number }>();
     for (const d of days) {
+      const p = holidayFor(d);
+      if (p) {
+        csomagEjek.set(p.label, (csomagEjek.get(p.label) ?? 0) + 1);
+        continue;
+      }
       const s = seasonFor(d);
       if (!s) {
         needsQuote = true;
@@ -167,6 +175,13 @@ export function quote(
       const entry = bySeason.get(s.id) ?? { season: s, nights: 0 };
       entry.nights += 1;
       bySeason.set(s.id, entry);
+    }
+    for (const [label, n] of csomagEjek) {
+      lines.push({
+        label: `${label} csomag`,
+        detail: `${n} éj × ${formatFt(PRICING.holidayPricePerNight)}`,
+        amount: n * PRICING.holidayPricePerNight,
+      });
     }
     for (const { season, nights: n } of bySeason.values()) {
       lines.push({

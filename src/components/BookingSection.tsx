@@ -119,7 +119,30 @@ export default function BookingSection() {
     setStatus("idle");
     setError(null);
 
-    // Ünnepnapra kizárólag a teljes csomag foglalható, ezért egyetlen
+    // Ha a kijelölés ünnepi csomagot tartalmaz, egy KÉSŐBBI napra kattintva
+    // meghosszabbítható a tartózkodás, nem indul újra a választás. A Megbízó
+    // kérése szerint a csomag mögé nyúlhat a foglalás; enélkül a csomag
+    // automatikus kijelölése épp ezt tenné lehetetlenné.
+    if (
+      checkIn &&
+      checkOut &&
+      d.getTime() > checkOut.getTime() &&
+      holidayFor(keyOf(checkIn)) !== null
+    ) {
+      let szabad = true;
+      for (let x = checkOut; x.getTime() < d.getTime(); x = addDays(x, 1)) {
+        if (statusOf(x) !== "free") {
+          szabad = false;
+          break;
+        }
+      }
+      if (szabad) {
+        setCheckOut(d);
+        return;
+      }
+    }
+
+    // Ünnepnapra a teljes csomaggal együtt lehet foglalni, ezért egyetlen
     // kattintással a teljes csomagot jelöljük ki – akármelyik napjára kattint.
     // Enélkül a vendégnek magának kellene kitalálnia a csomag záró napját, a
     // szilveszterinél ráadásul a következő évben.
