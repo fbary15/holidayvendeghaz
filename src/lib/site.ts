@@ -137,7 +137,9 @@ export const PRICING = {
     { label: "Pünkösd", from: "2026-05-22", to: "2026-05-25" },
     { label: "Szarvasi Szilvanapok", from: "2026-09-10", to: "2026-09-13" },
     { label: "Október 23.", from: "2026-10-22", to: "2026-10-25" },
-    { label: "Karácsony", from: "2026-12-24", to: "2026-12-27" },
+    // Karácsony szándékosan NINCS a listában: a Megbízó 2026-08-06-i levele
+    // szerint karácsonykor nincs csomag, az időszak alapáron (szezonáron)
+    // foglalható, minimum 3 éjszakával, mint bármely más időpont.
     { label: "Szilveszter", from: "2026-12-31", to: "2027-01-03" },
   ],
 
