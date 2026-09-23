@@ -99,7 +99,15 @@ export default function Footer() {
         </div>
 
         <p className="mt-6 text-center text-[11px] text-mist/50">
-          Készítette: Prometheus Digital
+          Készítette:{" "}
+          <a
+            href="https://www.prometheusdigital.hu/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-pine-300 transition-colors"
+          >
+            Prometheus Digital
+          </a>
         </p>
       </div>
     </footer>
