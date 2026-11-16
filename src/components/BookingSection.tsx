@@ -8,12 +8,21 @@ import { PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
 import {
   BOOKING_LIMITS,
   formatHuDate,
+  formatHuRange,
   fromISODate,
+  nightsBetween,
   toISODate,
   type Availability,
   type BookingStatus,
 } from "@/lib/booking";
-import { holidayFor, quote, validateStay } from "@/lib/pricing";
+import {
+  CURRENT_PRICING,
+  PRICING_YEARS,
+  holidayFor,
+  quote,
+  remainingOf,
+  validateStay,
+} from "@/lib/pricing";
 
 /*
  * FOGLALÁSI RENDSZER – UI
@@ -65,6 +74,8 @@ export default function BookingSection() {
   const [error, setError] = useState<string | null>(null);
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [pets, setPets] = useState(false);
+  // A vendégszám az árat is befolyásolja (kedvezmény legfeljebb 2 főre).
+  const [guests, setGuests] = useState(2);
 
   // A naptárat csak beépülés után rendereljük, hogy elkerüljük a „today”
   // szerver/kliens eltéréséből adódó hidratálási eltéréseket.
@@ -205,27 +216,36 @@ export default function BookingSection() {
     return lastCheckInDate !== null && d.getTime() > lastCheckInDate.getTime();
   }
 
-  /** Foglalt + függő napok együtt – a „kimaradt 2 éjszaka” szabályhoz kell. */
-  const unavailable = useMemo(
-    () => new Set([...bookedSet, ...pendingSet]),
-    [bookedSet, pendingSet]
-  );
-
   /** Ütközik-e a választás a foglalási szabályokkal (min. éjszaka, ünnepi csomag)? */
   const stayIssue = useMemo(
-    () =>
-      checkIn && checkOut ? validateStay(keyOf(checkIn), keyOf(checkOut), unavailable) : null,
-    [checkIn, checkOut, unavailable]
+    () => (checkIn && checkOut ? validateStay(keyOf(checkIn), keyOf(checkOut)) : null),
+    [checkIn, checkOut]
   );
 
   /** Tájékoztató árkalkuláció – csak érvényes választásra. */
   const priceQuote = useMemo(
     () =>
       checkIn && checkOut && !stayIssue
-        ? quote(keyOf(checkIn), keyOf(checkOut), pets ? 1 : 0, unavailable)
+        ? quote(keyOf(checkIn), keyOf(checkOut), { guests, pets: pets ? 1 : 0 })
         : null,
-    [checkIn, checkOut, stayIssue, pets, unavailable]
+    [checkIn, checkOut, stayIssue, pets, guests]
   );
+
+  /**
+   * Évfordulón a lejáró év még foglalható maradéka (pl. 2026 decembere) a saját
+   * árain megy – ezt az árlista alatt külön jelezzük. Csak beépülés után
+   * számoljuk, mert a mai naptól függ.
+   */
+  const earlierYears = useMemo(() => {
+    if (!mounted) return [];
+    const t = keyOf(today);
+    return PRICING_YEARS
+      .filter((y) => y.year !== CURRENT_PRICING.year)
+      .map((y) => ({ y, ...remainingOf(y, t) }))
+      .filter((r) => r.seasons.length + r.packages.length > 0);
+  }, [mounted, today]);
+
+  const discount = CURRENT_PRICING.discount;
 
   const canGoPrev =
     view.year > today.getFullYear() ||
@@ -285,7 +305,7 @@ export default function BookingSection() {
           name: String(data.get("name") ?? ""),
           email: String(data.get("email") ?? ""),
           phone: String(data.get("phone") ?? ""),
-          guests: Number(data.get("guests") ?? 2),
+          guests,
           pets: pets ? 1 : 0,
           message: String(data.get("message") ?? ""),
           company: String(data.get("company") ?? ""),
@@ -335,11 +355,17 @@ export default function BookingSection() {
           subtitle="Válassza ki az érkezés és a távozás napját a naptárban, majd küldje el foglalási igényét. Munkatársunk hamarosan visszaigazolja."
         />
 
-        {/* Árak – lásd PRICING a src/lib/site.ts-ben. */}
+        {/* Árak – lásd PRICING.years a src/lib/site.ts-ben (a legfrissebb év). */}
         <AnimatedSection>
           <div className="mt-10 mx-auto max-w-4xl glass-card rounded-3xl p-6 sm:p-8">
-            <div className="grid sm:grid-cols-2 gap-4">
-              {PRICING.seasons.map((s) => (
+            <p className="mb-4 text-sm text-mist/50">
+              <span className="font-heading text-lg font-medium text-mist">
+                Árak, {CURRENT_PRICING.year}
+              </span>{" "}
+              (max. {BOOKING_LIMITS.maxGuests} főre)
+            </p>
+            <div className={`grid gap-4 ${discount ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              {CURRENT_PRICING.seasons.map((s) => (
                 <div key={s.id} className="rounded-2xl bg-white/[0.03] border border-white/5 p-5">
                   <p className="text-[11px] uppercase tracking-wider text-pine-400/80 mb-1.5">
                     {s.label}
@@ -351,6 +377,21 @@ export default function BookingSection() {
                   <p className="mt-2 text-xs text-mist/50 leading-relaxed">{s.period}</p>
                 </div>
               ))}
+              {discount && (
+                <div className="rounded-2xl bg-pine-500/[0.06] border border-pine-500/20 p-5">
+                  <p className="text-[11px] uppercase tracking-wider text-pine-400/80 mb-1.5">
+                    Hétközi kedvezmény
+                  </p>
+                  <p className="font-heading text-2xl md:text-3xl font-semibold text-mist">
+                    {formatFt(discount.pricePerNight)}
+                    <span className="text-sm font-normal text-mist/45"> / éj</span>
+                  </p>
+                  <p className="mt-2 text-xs text-mist/50 leading-relaxed">
+                    Legfeljebb {discount.maxGuests} fő érkezése esetén, {discount.days}{" "}
+                    {discount.nights} éjszaka foglalásakor; {discount.period}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-5 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-mist/60">
@@ -377,25 +418,44 @@ export default function BookingSection() {
             </div>
 
             <ul className="mt-5 space-y-2 border-t border-white/5 pt-5 text-xs text-mist/55 leading-relaxed">
-              {PRICING.conditions.map((c) => (
-                <li key={c.slice(0, 24)} className="flex gap-2">
-                  <span className="text-pine-400/70 shrink-0">•</span>
-                  {c}
-                </li>
-              ))}
               <li className="flex gap-2">
                 <span className="text-pine-400/70 shrink-0">•</span>
-                Az ünnepnapokra kizárólag csomagban, főszezoni áron lehet foglalni:{" "}
-                {PRICING.holidayPackages
-                  .map((p) => `${p.label} (${formatHuDate(p.from)} – ${formatHuDate(p.to)})`)
-                  .join(" · ")}
-                .
+                <div>
+                  Az ünnepnapokra kizárólag csomagban, főszezoni áron (
+                  {formatFt(CURRENT_PRICING.holidayPricePerNight)}/éj) lehet foglalni:
+                  <ul className="mt-1.5 grid sm:grid-cols-2 gap-x-6 gap-y-1">
+                    {CURRENT_PRICING.holidayPackages.map((p) => (
+                      <li key={p.from}>
+                        <span className="text-mist/80">{p.label}</span> –{" "}
+                        {formatHuRange(p.from, p.to)}, {nightsBetween(p.from, p.to)} éj
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </li>
               <li className="flex gap-2">
                 <span className="text-pine-400/70 shrink-0">•</span>
                 {PRICING.validityNote}
               </li>
             </ul>
+
+            {earlierYears.map(({ y, seasons, packages }) => (
+              <p
+                key={y.year}
+                className="mt-5 border-t border-white/5 pt-5 text-xs text-mist/50 leading-relaxed"
+              >
+                <span className="text-mist/80 font-medium">{y.year}. évi árak</span> a még
+                foglalható időpontokra:{" "}
+                {[
+                  ...seasons.map((s) => `${s.label.toLowerCase()} ${formatFt(s.pricePerNight)}/éj`),
+                  ...packages.map(
+                    (p) =>
+                      `${p.label} csomag (${formatHuRange(p.from, p.to)}) ${formatFt(y.holidayPricePerNight)}/éj`
+                  ),
+                ].join(", ")}
+                .
+              </p>
+            ))}
           </div>
         </AnimatedSection>
 
@@ -516,7 +576,11 @@ export default function BookingSection() {
                 </span>
               </div>
 
-              {BOOKING_LIMITS.lastCheckIn && (
+              {/* A zárás csak akkor érdekes, ha a vendég már a záró hónapnál jár. */}
+              {BOOKING_LIMITS.lastCheckIn &&
+                lastCheckInDate &&
+                view.year * 12 + view.month >=
+                  lastCheckInDate.getFullYear() * 12 + lastCheckInDate.getMonth() && (
                 <p className="mt-3 text-xs text-mist/45 leading-relaxed">
                   Jelenleg {formatHuDate(BOOKING_LIMITS.lastCheckIn)} napjáig tudunk
                   foglalást fogadni. A későbbi időpontokra még nem nyitottuk meg a naptárat –
@@ -628,7 +692,13 @@ export default function BookingSection() {
                     </Field>
                   </div>
                   <Field label="Vendégek száma" htmlFor="b-guests">
-                    <select id="b-guests" name="guests" className={inputCls} defaultValue="2">
+                    <select
+                      id="b-guests"
+                      name="guests"
+                      className={inputCls}
+                      value={guests}
+                      onChange={(e) => setGuests(Number(e.target.value))}
+                    >
                       {Array.from({ length: BOOKING_LIMITS.maxGuests }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n} className="bg-coal-850">
                           {n} fő

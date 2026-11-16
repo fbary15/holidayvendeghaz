@@ -9,21 +9,23 @@ export const BOOKING_LIMITS = {
   email: 254,
   phone: 40,
   message: 2000,
-  /** Legfeljebb ennyi hónapra előre lehet foglalni. */
+  /**
+   * Ha nincs `lastCheckIn`, legfeljebb ennyi hónapra előre lehet foglalni.
+   * Ha van, az a korlát: a Megbízó évente megnyitja a következő évet.
+   */
   monthsAhead: 12,
   /**
    * Az utolsó nap, amelyre ÉRKEZÉS foglalható (`YYYY-MM-DD`), vagy `null`, ha
    * csak a `monthsAhead` korlátoz.
    *
-   * A Megbízó 2026-08-03-án kérte, hogy egyelőre csak 2026-ra lehessen
-   * foglalni, mert a 2027-es árakat még nem határozta meg. A korlát
-   * szándékosan az ÉRKEZÉSRE vonatkozik: így a szilveszteri csomag
-   * (érkezés 2026-12-31, távozás 2027-01-03) még foglalható marad.
+   * A Megbízó 2026-11-12-én megküldte a 2027-es árakat, ezért 2027 végéig
+   * nyitva. A korlát szándékosan az ÉRKEZÉSRE vonatkozik: így a szilveszteri
+   * csomag (érkezés 2027-12-30, távozás 2028-01-02) még foglalható.
    *
-   * A 2027-es árak és ünnepi időpontok megérkezésekor ezt kell kitolni vagy
-   * `null`-ra állítani – és a PRICING.holidayPackages listát is bővíteni.
+   * A következő év árainak megérkezésekor ezt kell kitolni, és a
+   * PRICING.years listát bővíteni.
    */
-  lastCheckIn: "2026-12-31" as string | null,
+  lastCheckIn: "2027-12-30" as string | null,
   /** Max éjszaka egy igényben – nyilvánvaló elgépelés/visszaélés kiszűrésére. */
   maxNights: 60,
   /** Max vendégszám (3 hálószoba, 6 fő). */
@@ -101,6 +103,21 @@ export function formatHuDate(iso: string): string {
   const d = fromISODate(iso);
   if (!d) return iso;
   return `${d.getFullYear()}. ${MONTHS_HU[d.getMonth()]} ${d.getDate()}.`;
+}
+
+/**
+ * Rövid dátumtartomány: „2027. március 12–15.”, „2027. október 29. – november 1.”,
+ * évfordulón „2027. december 30. – 2028. január 2.”
+ */
+export function formatHuRange(from: string, to: string): string {
+  const a = fromISODate(from);
+  const b = fromISODate(to);
+  if (!a || !b) return `${from} – ${to}`;
+  if (a.getFullYear() !== b.getFullYear()) return `${formatHuDate(from)} – ${formatHuDate(to)}`;
+  if (a.getMonth() !== b.getMonth()) {
+    return `${a.getFullYear()}. ${MONTHS_HU[a.getMonth()]} ${a.getDate()}. – ${MONTHS_HU[b.getMonth()]} ${b.getDate()}.`;
+  }
+  return `${a.getFullYear()}. ${MONTHS_HU[a.getMonth()]} ${a.getDate()}–${b.getDate()}.`;
 }
 
 /** Éjszakák száma két ISO dátum között. */

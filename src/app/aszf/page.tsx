@@ -1,7 +1,9 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
 import { CONTACT, PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
-import { BOOKING_LIMITS, formatHuDate } from "@/lib/booking";
+import { BOOKING_LIMITS, formatHuRange } from "@/lib/booking";
+import { PRICING_YEARS } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "ÁSZF",
@@ -21,7 +23,7 @@ export default function AszfPage() {
     <LegalPage
       title="Általános Szerződési Feltételek"
       intro="A Holiday Vendégház szálláshely-szolgáltatásának igénybevételére vonatkozó általános feltételek."
-      lastUpdated="2026. július"
+      lastUpdated="2026. november"
     >
 
       <h2>1. A szolgáltató</h2>
@@ -53,31 +55,43 @@ export default function AszfPage() {
 
       <h2>4. Árak és fizetés</h2>
       <p>
-        A feltüntetett árak a teljes nyaralóra, éjszakánként értendők. A minimum foglalható
-        időszak {PRICING.minNights} éjszaka.
+        A feltüntetett árak a teljes nyaralóra (legfeljebb {BOOKING_LIMITS.maxGuests} főre),
+        éjszakánként értendők. A minimum foglalható időszak {PRICING.minNights} éjszaka. Minden
+        éjszaka annak az évnek az árai szerint számít, amelyre esik.
       </p>
+      {PRICING_YEARS.map((y) => (
+        <Fragment key={y.year}>
+          <h3>{y.year}. évi árak</h3>
+          <ul>
+            {y.seasons.map((s) => (
+              <li key={s.id}>
+                <strong>{s.label}</strong> ({s.period}, az ünnepnapok kivételével):{" "}
+                {formatFt(s.pricePerNight)} / éj
+              </li>
+            ))}
+            {y.discount && (
+              <li>
+                <strong>Kedvezmény:</strong> {y.discount.period} között legfeljebb{" "}
+                {y.discount.maxGuests} fő érkezése esetén, {y.discount.days}{" "}
+                {y.discount.nights} éjszaka foglalásakor {formatFt(y.discount.pricePerNight)} / éj.
+              </li>
+            )}
+            <li>
+              <strong>Ünnepnapok:</strong> kizárólag csomagban, főszezoni áron (
+              {formatFt(y.holidayPricePerNight)} / éj) foglalhatók:{" "}
+              {y.holidayPackages
+                .map((p) => `${p.label} (${formatHuRange(p.from, p.to)})`)
+                .join("; ")}
+              .
+            </li>
+          </ul>
+        </Fragment>
+      ))}
       <ul>
-        {PRICING.seasons.map((s) => (
-          <li key={s.id}>
-            <strong>{s.label}</strong> ({s.period}, az ünnepnapok kivételével):{" "}
-            {formatFt(s.pricePerNight)} / éj
-          </li>
-        ))}
-        <li>
-          <strong>Ünnepnapok:</strong> kizárólag csomagban, főszezoni áron (
-          {formatFt(PRICING.holidayPricePerNight)} / éj) foglalhatók:{" "}
-          {PRICING.holidayPackages
-            .map((p) => `${p.label} (${formatHuDate(p.from)} – ${formatHuDate(p.to)})`)
-            .join("; ")}
-          .
-        </li>
         <li>
           <strong>Háziállat:</strong> legfeljebb {PRICING.pets.max} hozható,{" "}
           {formatFt(PRICING.pets.feePerNight)} / éjszaka felár ellenében.
         </li>
-        {PRICING.conditions.map((c) => (
-          <li key={c.slice(0, 24)}>{c}</li>
-        ))}
       </ul>
       <p>
         Az ár tartalmazza {PRICING.includes.join(" és ")}. Az ár <strong>nem</strong> tartalmazza{" "}

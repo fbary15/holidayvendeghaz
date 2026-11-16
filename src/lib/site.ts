@@ -91,85 +91,121 @@ export const BOOKING_FLOW = {
 } as const;
 
 /**
- * Árazás – a Megbízó által 2026-07-30-án megadott „Árak, foglalás, 2026”
- * alapján. Az árak a TELJES nyaralóra értendők, éjszakánként.
+ * Árazás évenként – a Megbízó „Árak, foglalás, <év>” szövegei alapján. Az árak
+ * a TELJES nyaralóra értendők, éjszakánként. Minden éjszaka a saját évének
+ * árlistája szerint árazódik (egy 2026 → 2027 évfordulós tartózkodás vegyes).
  *
- * Évforduló: a `holidayPackages` konkrét 2026-os dátumokat tartalmaz. Amikor a
- * foglalási ablak átnyúlik 2027-re, a Megbízótól be kell kérni a következő évi
- * ünnepi időpontokat, különben azok a napok sima szezonáron foglalhatók.
+ * Új év hozzáadása: új elem a `years` végére, a BOOKING_LIMITS.lastCheckIn
+ * kitolása, és ha az előző év már teljesen elmúlt, annak törlése. Olyan
+ * éjszakára, amelynek évéhez nincs árlista, nem számolunk árat (egyedi ajánlat).
  */
 export const PRICING = {
-  /** Minimum foglalható éjszakák száma (minden szezonban). */
+  /** Minimum foglalható éjszakák száma (minden évben, minden szezonban). */
   minNights: 3,
 
-  /**
-   * Szezonok. A `from`/`to` `MM-DD` alakú, év nélkül, és a záró nap beleértendő.
-   * Ami egyik tartományba sem esik (dec. 31. és jan. 1.), az kizárólag ünnepi
-   * csomagban foglalható – lásd `holidayPackages`.
-   */
-  seasons: [
+  years: [
     {
-      id: "fo",
-      label: "Főszezon",
-      period: "június 1. – augusztus 31.",
-      pricePerNight: 75_000,
-      ranges: [{ from: "06-01", to: "08-31" }],
-    },
-    {
-      id: "elo",
-      label: "Elő- és utószezon",
-      period: "január 2. – május 31. és szeptember 1. – december 30.",
-      pricePerNight: 55_000,
-      ranges: [
-        { from: "01-02", to: "05-31" },
-        { from: "09-01", to: "12-30" },
+      /** „Árak, foglalás, 2026” – a Megbízó 2026-07-30-i levele. */
+      year: 2026,
+      /**
+       * Szezonok. A `from`/`to` `MM-DD` alakú, és a záró nap beleértendő. Ami
+       * egyik tartományba sem esik, az kizárólag ünnepi csomagban foglalható.
+       */
+      seasons: [
+        {
+          id: "fo",
+          label: "Főszezon",
+          period: "június 1. – augusztus 31.",
+          pricePerNight: 75_000,
+          ranges: [{ from: "06-01", to: "08-31" }],
+        },
+        {
+          id: "elo",
+          label: "Elő- és utószezon",
+          period: "január 2. – május 31. és szeptember 1. – december 30.",
+          pricePerNight: 55_000,
+          ranges: [
+            { from: "01-02", to: "05-31" },
+            { from: "09-01", to: "12-30" },
+          ],
+        },
       ],
+      /** Ünnepi csomag ára / éjszaka (az adott évi főszezoni ár). */
+      holidayPricePerNight: 75_000,
+      /**
+       * Ünnepnapok: kizárólag csomagban foglalhatók. A csomag minden éjszakáját
+       * tartalmaznia kell a foglalásnak (érkezés ≤ `from`, távozás ≥ `to`).
+       */
+      holidayPackages: [
+        { label: "Húsvét", from: "2026-04-03", to: "2026-04-06" },
+        { label: "Május 1.", from: "2026-04-30", to: "2026-05-03" },
+        { label: "Pünkösd", from: "2026-05-22", to: "2026-05-25" },
+        { label: "Szarvasi Szilvanapok", from: "2026-09-10", to: "2026-09-13" },
+        { label: "Október 23.", from: "2026-10-22", to: "2026-10-25" },
+        // 2026-ban karácsonykor nincs csomag (a Megbízó 2026-08-06-i levele):
+        // az időszak szezonáron foglalható, minimum 3 éjszakával.
+        { label: "Szilveszter", from: "2026-12-31", to: "2027-01-03" },
+      ],
+      discount: null,
+    },
+    {
+      /** „Árak, foglalás, 2027” – a Megbízó 2026-11-12-i levele. */
+      year: 2027,
+      seasons: [
+        {
+          id: "fo",
+          label: "Főszezon",
+          period: "június 1. – augusztus 31.",
+          pricePerNight: 80_000,
+          ranges: [{ from: "06-01", to: "08-31" }],
+        },
+        {
+          id: "elo",
+          label: "Elő- és utószezon",
+          period: "január 3. – május 31. és szeptember 1. – december 29.",
+          pricePerNight: 60_000,
+          ranges: [
+            { from: "01-03", to: "05-31" },
+            { from: "09-01", to: "12-29" },
+          ],
+        },
+      ],
+      holidayPricePerNight: 80_000,
+      holidayPackages: [
+        { label: "Március 15.", from: "2027-03-12", to: "2027-03-15" },
+        { label: "Húsvét", from: "2027-03-26", to: "2027-03-29" },
+        { label: "Pünkösd", from: "2027-05-14", to: "2027-05-17" },
+        { label: "Szarvasi Szilvanapok", from: "2027-09-09", to: "2027-09-12" },
+        { label: "Mindenszentek", from: "2027-10-29", to: "2027-11-01" },
+        { label: "Karácsony", from: "2027-12-24", to: "2027-12-27" },
+        { label: "Szilveszter", from: "2027-12-30", to: "2028-01-02" },
+      ],
+      /**
+       * „január 3. és április 30. valamint október 1. és december 29. között
+       * max. 2 fő érkezése esetén vasárnaptól csütörtökig 4 éjszaka foglalásakor
+       * kedvezményesen: 40.000 Ft/nyaraló/éj”. Szó szerint vesszük: érkezés
+       * vasárnap, távozás csütörtök (pontosan 4 éj), mind a 4 éjszaka a
+       * tartományokon belül (a Megbízó 2026-08-03-án pontosította, hogy a
+       * tartózkodás időpontja számít), és egyik sem ünnepi csomag.
+       */
+      discount: {
+        pricePerNight: 40_000,
+        maxGuests: 2,
+        nights: 4,
+        /** `Date.getDay()` szerint: 0 = vasárnap. */
+        checkInWeekday: 0,
+        days: "vasárnaptól csütörtökig",
+        period: "január 3. – április 30. és október 1. – december 29.",
+        ranges: [
+          { from: "01-03", to: "04-30" },
+          { from: "10-01", to: "12-29" },
+        ],
+      },
     },
   ],
-
-  /**
-   * Ünnepnapok: kizárólag csomagban, főszezoni áron foglalhatók. A csomag
-   * dátumai pontosan illeszkedjenek (érkezés = `from`, távozás = `to`).
-   */
-  holidayPackages: [
-    { label: "Húsvét", from: "2026-04-03", to: "2026-04-06" },
-    { label: "Május 1.", from: "2026-04-30", to: "2026-05-03" },
-    { label: "Pünkösd", from: "2026-05-22", to: "2026-05-25" },
-    { label: "Szarvasi Szilvanapok", from: "2026-09-10", to: "2026-09-13" },
-    { label: "Október 23.", from: "2026-10-22", to: "2026-10-25" },
-    // Karácsony szándékosan NINCS a listában: a Megbízó 2026-08-06-i levele
-    // szerint karácsonykor nincs csomag, az időszak alapáron (szezonáron)
-    // foglalható, minimum 3 éjszakával, mint bármely más időpont.
-    { label: "Szilveszter", from: "2026-12-31", to: "2027-01-03" },
-  ],
-
-  /** Ünnepi csomag ára / éjszaka (főszezoni ár). */
-  holidayPricePerNight: 75_000,
-
-  /**
-   * „A kimaradt 2 éjszakák foglalása esetén: 85.000 Ft/nyaraló/éj.”
-   * Ez a Megbízó szövegében KIZÁRÓLAG a főszezonhoz tartozik: csak ott lehet a
-   * 3 éjszakás minimum alatt foglalni, és csak akkor, ha a választott időszak
-   * pontosan két foglalás közé beszorult rést tölt ki.
-   */
-  gapFill: { seasonId: "fo", nights: 2, pricePerNight: 85_000 },
 
   /** Háziállat: legfeljebb ennyi, a megadott éjszakánkénti felárért. */
   pets: { max: 1, feePerNight: 2_500 },
-
-  /**
-   * Külön feltételek, amelyeket NEM számolunk automatikusan (a végleges árat a
-   * tulajdonos igazolja vissza), de a vendégnek meg kell jelennie:
-   */
-  conditions: [
-    "Főszezonban a két foglalás közé beszorult, kimaradt 2 éjszaka is foglalható: 85.000 Ft/nyaraló/éj.",
-    // A Megbízó „április 30-ig, max. 2 fő, vasárnap–csütörtök: 35.000 Ft/éj”
-    // kedvezménye szándékosan NEM szerepel: 2026. április 30. már elmúlt, tehát
-    // nem igényelhető, és feltételként kiírva félrevezető lenne. A Megbízó
-    // 2026-08-03-án pontosította, hogy a TARTÓZKODÁS időpontja számít – így a
-    // 2027-es árak megérkezésekor már automatikus árszámítással beköthető:
-    // tartózkodás vége ≤ 04-30, legfeljebb 2 fő, minden éjszaka vasárnap–szerda.
-  ],
 
   includes: ["a hűtő-fűtő klímák használati díja", "a jakuzzi használati díja"],
   excludes: ["az idegenforgalmi adó"],

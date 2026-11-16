@@ -66,14 +66,13 @@ export async function GET() {
   }
 
   const from = today();
-  const rolling = new Date(from.getFullYear(), from.getMonth() + BOOKING_LIMITS.monthsAhead, 1);
-  // A záró dátumon túl is kérünk pár napot, hogy az utolsó nappal kezdődő
-  // foglalás (pl. a szilveszteri csomag) elfoglalt napjai is látszódjanak.
+  // Ha van záró nap, az a korlát; különben a gördülő `monthsAhead`. A záró
+  // dátumon túl is kérünk két hetet, hogy az utolsó nappal kezdődő foglalás
+  // (pl. a szilveszteri csomag) elfoglalt napjai is látszódjanak.
   const hardLimit = BOOKING_LIMITS.lastCheckIn ? fromISODate(BOOKING_LIMITS.lastCheckIn) : null;
-  const to =
-    hardLimit && hardLimit < rolling
-      ? new Date(hardLimit.getFullYear(), hardLimit.getMonth(), hardLimit.getDate() + 14)
-      : rolling;
+  const to = hardLimit
+    ? new Date(hardLimit.getFullYear(), hardLimit.getMonth(), hardLimit.getDate() + 14)
+    : new Date(from.getFullYear(), from.getMonth() + BOOKING_LIMITS.monthsAhead, 1);
 
   try {
     const availability = await getAvailability(toISODate(from), toISODate(to));
@@ -148,11 +147,13 @@ function validate(body: Record<string, unknown>): Validated {
     };
   }
 
-  const limit = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate());
-  const maxDate = new Date();
-  maxDate.setMonth(maxDate.getMonth() + BOOKING_LIMITS.monthsAhead);
-  if (limit > maxDate) {
-    return { ok: false, error: `Jelenleg legfeljebb ${BOOKING_LIMITS.monthsAhead} hónapra előre lehet foglalni.` };
+  // Záró nap nélkül a gördülő korlát érvényes.
+  if (!hardLimit) {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + BOOKING_LIMITS.monthsAhead);
+    if (inDate > maxDate) {
+      return { ok: false, error: `Jelenleg legfeljebb ${BOOKING_LIMITS.monthsAhead} hónapra előre lehet foglalni.` };
+    }
   }
 
   return {
@@ -198,12 +199,8 @@ export async function POST(request: Request) {
   }
 
   // Ütközés- és szabályellenőrzés közvetlenül a beírás előtt, hogy két egyszerre
-  // érkező igény ne foglalhassa le ugyanazt a napot. A szomszédos napokat is
-  // lekérjük, mert a „kimaradt 2 éjszaka” szabályhoz tudni kell, hogy az időszak
-  // két foglalás közé esik-e.
-  // A foglalt napok halmaza az e-mailek árkalkulációjához is kell (a főszezoni
-  // „kimaradt 2 éjszaka” felismeréséhez), ezért a blokkon kívül tartjuk.
-  let taken = new Set<string>();
+  // érkező igény ne foglalhassa le ugyanazt a napot. A lekérdezés a széleken
+  // egy-egy nap ráhagyással fut, hogy a határnapot érintő esemény se maradjon ki.
   try {
     const shift = (iso: string, delta: number) => {
       const d = fromISODate(iso)!;
@@ -211,9 +208,9 @@ export async function POST(request: Request) {
     };
     const availability = await getAvailability(
       shift(booking.checkIn, -1),
-      shift(booking.checkOut, 2)
+      shift(booking.checkOut, 1)
     );
-    taken = new Set([...availability.booked, ...availability.pending]);
+    const taken = new Set([...availability.booked, ...availability.pending]);
     const wanted = daysBetween(booking.checkIn, booking.checkOut);
     if (wanted.some((d) => taken.has(d))) {
       return Response.json(
@@ -224,7 +221,7 @@ export async function POST(request: Request) {
 
     // A felületen is ellenőrzött szabályok (min. éjszaka, ünnepi csomag) –
     // szerveroldalon is, mert a kliens megkerülhető.
-    const issue = validateStay(booking.checkIn, booking.checkOut, taken);
+    const issue = validateStay(booking.checkIn, booking.checkOut);
     if (issue) return Response.json({ error: issue.message }, { status: 400 });
   } catch (err) {
     if (err instanceof CalendarNotConfigured) {
@@ -248,7 +245,10 @@ export async function POST(request: Request) {
   const petsText = booking.pets ? `${booking.pets} db (+${formatFt(PRICING.pets.feePerNight)}/éj)` : "nem";
 
   // Tájékoztató árkalkuláció – ugyanaz, amit a vendég a felületen látott.
-  const priceQuote = quote(booking.checkIn, booking.checkOut, booking.pets ?? 0, taken);
+  const priceQuote = quote(booking.checkIn, booking.checkOut, {
+    guests: booking.guests,
+    pets: booking.pets ?? 0,
+  });
   const priceLines = priceQuote
     ? [
         ...priceQuote.lines.map((l) => `  ${l.label} (${l.detail}): ${formatFt(l.amount)}`),
