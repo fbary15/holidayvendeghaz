@@ -18,14 +18,15 @@ export const BOOKING_LIMITS = {
    * Az utolsó nap, amelyre ÉRKEZÉS foglalható (`YYYY-MM-DD`), vagy `null`, ha
    * csak a `monthsAhead` korlátoz.
    *
-   * A Megbízó 2026-11-12-én megküldte a 2027-es árakat, ezért 2027 végéig
-   * nyitva. A korlát szándékosan az ÉRKEZÉSRE vonatkozik: így a szilveszteri
-   * csomag (érkezés 2027-12-30, távozás 2028-01-02) még foglalható.
+   * A Megbízó 2026-11-12-én megküldte a 2027-es árakat; a 2027-es szezon a
+   * szilveszteri csomaggal zárul (érkezés 2027-12-29, távozás 2028-01-02). A
+   * korlát az ÉRKEZÉSRE vonatkozik; a távozást az árazás korlátozza (árlista
+   * nélküli éjszaka nem foglalható, lásd `validateStay`).
    *
    * A következő év árainak megérkezésekor ezt kell kitolni, és a
    * PRICING.years listát bővíteni.
    */
-  lastCheckIn: "2027-12-30" as string | null,
+  lastCheckIn: "2027-12-29" as string | null,
   /** Max éjszaka egy igényben – nyilvánvaló elgépelés/visszaélés kiszűrésére. */
   maxNights: 60,
   /** Max vendégszám (3 hálószoba, 6 fő). */

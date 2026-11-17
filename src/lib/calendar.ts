@@ -127,9 +127,11 @@ export async function getAvailability(from: string, to: string): Promise<Availab
   const expired: calendar_v3.Schema$Event[] = [];
 
   for (const ev of res.data.items ?? []) {
-    // A „szabadként” jelölt események (pl. emlékeztetők) nem foglalnak napot.
-    if (ev.transparency === "transparent") continue;
-
+    // A tulajdonos által kézzel felvett esemény MINDIG foglal, a „Szabad /
+    // Foglalt” jelöléstől függetlenül: a Google Naptár az egész napos
+    // eseményeket alapból „Szabad”-ként menti, és a tulajdonos ezzel zárja le
+    // a weboldalon kívül foglalt napokat (Megbízó, 2026-11-17). A saját lejárt
+    // igényeinket a `hvStatus` alapján hagyjuk ki.
     const status = statusOf(ev);
     if (status === "expired") continue;
 

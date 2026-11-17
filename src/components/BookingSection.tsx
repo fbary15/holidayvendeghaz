@@ -19,6 +19,7 @@ import {
   CURRENT_PRICING,
   PRICING_YEARS,
   holidayFor,
+  packagesOf,
   quote,
   remainingOf,
   validateStay,
@@ -246,6 +247,7 @@ export default function BookingSection() {
   }, [mounted, today]);
 
   const discount = CURRENT_PRICING.discount;
+  const currentPackages = packagesOf(CURRENT_PRICING);
 
   const canGoPrev =
     view.year > today.getFullYear() ||
@@ -424,15 +426,34 @@ export default function BookingSection() {
                   Az ünnepnapokra kizárólag csomagban, főszezoni áron (
                   {formatFt(CURRENT_PRICING.holidayPricePerNight)}/éj) lehet foglalni:
                   <ul className="mt-1.5 grid sm:grid-cols-2 gap-x-6 gap-y-1">
-                    {CURRENT_PRICING.holidayPackages.map((p) => (
-                      <li key={p.from}>
-                        <span className="text-mist/80">{p.label}</span> –{" "}
-                        {formatHuRange(p.from, p.to)}, {nightsBetween(p.from, p.to)} éj
-                      </li>
-                    ))}
+                    {currentPackages
+                      .filter((p) => !p.ownPrice)
+                      .map((p) => (
+                        <li key={p.from}>
+                          <span className="text-mist/80">{p.label}</span> –{" "}
+                          {formatHuRange(p.from, p.to)}, {nightsBetween(p.from, p.to)} éj
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </li>
+              {/* Saját áras csomag (pl. a 2027-es szilveszteri) – külön sorban. */}
+              {currentPackages
+                .filter((p) => p.ownPrice)
+                .map((p) => {
+                  const n = nightsBetween(p.from, p.to);
+                  return (
+                    <li key={p.from} className="flex gap-2">
+                      <span className="text-pine-400/70 shrink-0">•</span>
+                      <span>
+                        <span className="text-mist/85 font-medium">{p.name}:</span>{" "}
+                        {formatHuRange(p.from, p.to)}, {n} éj, kizárólag egyben foglalható –{" "}
+                        {formatFt(p.pricePerNight)}/éj, összesen{" "}
+                        <span className="text-mist/85 font-medium">{formatFt(n * p.pricePerNight)}</span>.
+                      </span>
+                    </li>
+                  );
+                })}
               <li className="flex gap-2">
                 <span className="text-pine-400/70 shrink-0">•</span>
                 {PRICING.validityNote}
@@ -450,7 +471,7 @@ export default function BookingSection() {
                   ...seasons.map((s) => `${s.label.toLowerCase()} ${formatFt(s.pricePerNight)}/éj`),
                   ...packages.map(
                     (p) =>
-                      `${p.label} csomag (${formatHuRange(p.from, p.to)}) ${formatFt(y.holidayPricePerNight)}/éj`
+                      `${p.name} (${formatHuRange(p.from, p.to)}) ${formatFt(p.pricePerNight)}/éj`
                   ),
                 ].join(", ")}
                 .
@@ -629,7 +650,7 @@ export default function BookingSection() {
                 <div className="-mt-1 mb-5 rounded-xl bg-white/[0.03] border border-white/5 p-4">
                   {priceQuote.holiday && (
                     <p className="mb-2 text-[11px] uppercase tracking-wider text-pine-400/80">
-                      {priceQuote.holiday.label} csomag
+                      {priceQuote.holiday.name}
                     </p>
                   )}
                   <dl className="space-y-1.5 text-xs">
@@ -649,9 +670,7 @@ export default function BookingSection() {
                     </span>
                   </div>
                   <p className="mt-2 text-[11px] text-mist/45 leading-relaxed">
-                    {priceQuote.needsQuote
-                      ? "A választott időszak egy részére egyedi ajánlatot adunk – kérjük, küldje el az igényét."
-                      : `Az összeg nem tartalmazza ${PRICING.excludes.join(", ")}. A végleges árat visszaigazoláskor erősítjük meg.`}
+                    {`Az összeg nem tartalmazza ${PRICING.excludes.join(", ")}. A végleges árat visszaigazoláskor erősítjük meg.`}
                   </p>
                 </div>
               )}

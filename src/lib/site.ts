@@ -178,7 +178,16 @@ export const PRICING = {
         { label: "Szarvasi Szilvanapok", from: "2027-09-09", to: "2027-09-12" },
         { label: "Mindenszentek", from: "2027-10-29", to: "2027-11-01" },
         { label: "Karácsony", from: "2027-12-24", to: "2027-12-27" },
-        { label: "Szilveszter", from: "2027-12-30", to: "2028-01-02" },
+        // A Megbízó 2026-11-17-i kérése: 4 éjszakás csomag, saját áron
+        // (100.000 Ft/éj, összesen 400.000 Ft), „szilveszteri csomag” néven.
+        // Ezzel zárul a 2027-es szezon (távozás 2028. január 2.).
+        {
+          label: "Szilveszter",
+          name: "Szilveszteri csomag",
+          from: "2027-12-29",
+          to: "2028-01-02",
+          pricePerNight: 100_000,
+        },
       ],
       /**
        * „január 3. és április 30. valamint október 1. és december 29. között

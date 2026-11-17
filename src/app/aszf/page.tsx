@@ -2,8 +2,8 @@ import { Fragment } from "react";
 import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
 import { CONTACT, PRICING, BOOKING_FLOW, formatFt } from "@/lib/site";
-import { BOOKING_LIMITS, formatHuRange } from "@/lib/booking";
-import { PRICING_YEARS } from "@/lib/pricing";
+import { BOOKING_LIMITS, formatHuRange, nightsBetween } from "@/lib/booking";
+import { PRICING_YEARS, packagesOf } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "ÁSZF",
@@ -79,11 +79,24 @@ export default function AszfPage() {
             <li>
               <strong>Ünnepnapok:</strong> kizárólag csomagban, főszezoni áron (
               {formatFt(y.holidayPricePerNight)} / éj) foglalhatók:{" "}
-              {y.holidayPackages
+              {packagesOf(y)
+                .filter((p) => !p.ownPrice)
                 .map((p) => `${p.label} (${formatHuRange(p.from, p.to)})`)
                 .join("; ")}
               .
             </li>
+            {packagesOf(y)
+              .filter((p) => p.ownPrice)
+              .map((p) => {
+                const n = nightsBetween(p.from, p.to);
+                return (
+                  <li key={p.from}>
+                    <strong>{p.name}</strong> ({formatHuRange(p.from, p.to)}, {n} éjszaka):
+                    kizárólag egyben foglalható, {formatFt(p.pricePerNight)} / éj, összesen{" "}
+                    {formatFt(n * p.pricePerNight)}.
+                  </li>
+                );
+              })}
           </ul>
         </Fragment>
       ))}

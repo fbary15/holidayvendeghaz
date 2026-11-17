@@ -1,5 +1,5 @@
 import { PRICING, formatFt } from "@/lib/site";
-import { daysBetween, formatHuRange, fromISODate, nightsBetween } from "@/lib/booking";
+import { daysBetween, formatHuDate, formatHuRange, fromISODate, nightsBetween } from "@/lib/booking";
 
 /**
  * Árazási és foglalási szabályok (Megbízó: „Árak, foglalás, <év>”, az adatok
@@ -32,16 +32,28 @@ export type YearPricing = {
   readonly year: number;
   readonly seasons: readonly Season[];
   readonly holidayPricePerNight: number;
-  readonly holidayPackages: readonly { readonly label: string; readonly from: string; readonly to: string }[];
+  readonly holidayPackages: readonly {
+    readonly label: string;
+    /** Megjelenített név; alapból „<label> csomag”. */
+    readonly name?: string;
+    readonly from: string;
+    readonly to: string;
+    /** Saját ár / éj; alapból az év `holidayPricePerNight` értéke. */
+    readonly pricePerNight?: number;
+  }[];
   readonly discount: Discount | null;
 };
 
 export type HolidayPackage = {
   label: string;
+  /** Pl. „Karácsony csomag”, „Szilveszteri csomag”. */
+  name: string;
   from: string;
   to: string;
   year: number;
   pricePerNight: number;
+  /** Saját, a szokásos ünnepi ártól eltérő ára van. */
+  ownPrice: boolean;
 };
 
 /** Az évenkénti árlisták, egyszerűsített (nem `as const`) típussal. */
@@ -51,10 +63,23 @@ const YEARS = PRICING_YEARS;
 /** A legfrissebb év árlistája – ezt mutatjuk az oldalon árlistaként. */
 export const CURRENT_PRICING: YearPricing = YEARS[YEARS.length - 1];
 
-/** Az összes év ünnepi csomagja, a saját évének csomagárával. */
+/** Az összes év ünnepi csomagja, névvel és a rá érvényes éjszakai árral. */
 const PACKAGES: readonly HolidayPackage[] = YEARS.flatMap((y) =>
-  y.holidayPackages.map((p) => ({ ...p, year: y.year, pricePerNight: y.holidayPricePerNight }))
+  y.holidayPackages.map((p) => ({
+    label: p.label,
+    name: p.name ?? `${p.label} csomag`,
+    from: p.from,
+    to: p.to,
+    year: y.year,
+    pricePerNight: p.pricePerNight ?? y.holidayPricePerNight,
+    ownPrice: p.pricePerNight !== undefined,
+  }))
 );
+
+/** Egy év ünnepi csomagjai (névvel, árral). */
+export function packagesOf(y: YearPricing): HolidayPackage[] {
+  return PACKAGES.filter((p) => p.year === y.year);
+}
 
 /** Az adott nap (`YYYY-MM-DD`) évének árlistája, ha van. */
 export function pricingYear(iso: string): YearPricing | null {
@@ -92,7 +117,7 @@ export function exactHolidayPackage(checkIn: string, checkOut: string): HolidayP
 export function remainingOf(y: YearPricing, todayIso: string) {
   return {
     seasons: y.seasons.filter((s) => s.ranges.some((r) => `${y.year}-${r.to}` >= todayIso)),
-    packages: y.holidayPackages.filter((p) => p.from >= todayIso),
+    packages: packagesOf(y).filter((p) => p.from >= todayIso),
   };
 }
 
@@ -115,12 +140,27 @@ export function discountFor(checkIn: string, checkOut: string, guests: number): 
   return ok ? d : null;
 }
 
-export type StayIssue = { code: "minNights" | "holidayPartial" | "range"; message: string };
+export type StayIssue = {
+  code: "minNights" | "holidayPartial" | "range" | "closed";
+  message: string;
+};
 
-/** A foglalási szabályok ellenőrzése (minimum éjszakák, ünnepi csomagok). */
+/** A foglalási szabályok ellenőrzése (nyitott időszak, ünnepi csomagok, minimum éjszakák). */
 export function validateStay(checkIn: string, checkOut: string): StayIssue | null {
   const nights = nightsBetween(checkIn, checkOut);
   if (nights < 1) return { code: "range", message: "A távozás dátuma legyen későbbi az érkezésnél." };
+
+  // 0) Csak árazott éjszaka foglalható: a szezon az utolsó árazott éjszaka
+  //    utáni nappal zárul (2027-ben a szilveszteri csomag végével, 2028-01-02).
+  const zart = daysBetween(checkIn, checkOut).find(
+    (d) => holidayFor(d) === null && seasonFor(d) === null
+  );
+  if (zart) {
+    return {
+      code: "closed",
+      message: `A legkésőbbi távozási nap jelenleg ${formatHuDate(zart)} Az ezt követő éjszakákra még nem tudunk foglalást fogadni.`,
+    };
+  }
 
   // 1) Ünnepnapoknál a csomagot HIÁNYTALANUL tartalmaznia kell a foglalásnak.
   //    A Megbízó 2026-08-05-i kérése szerint a csomag elé vagy mögé nyúlhat a
@@ -134,7 +174,7 @@ export function validateStay(checkIn: string, checkOut: string): StayIssue | nul
   ];
   const csonka = touched.filter((p) => checkIn > p.from || checkOut < p.to);
   if (csonka.length > 0) {
-    const list = csonka.map((p) => `${p.label}: ${formatHuRange(p.from, p.to)}`).join(" · ");
+    const list = csonka.map((p) => `${p.name}: ${formatHuRange(p.from, p.to)}`).join(" · ");
     return {
       code: "holidayPartial",
       message: `A választott időszak ünnepnapot érint, amelyre csak a teljes csomaggal együtt lehet foglalni – ${list}. A csomag elé vagy után nyugodtan hosszabbíthatja a tartózkodást.`,
@@ -157,8 +197,6 @@ export type Quote = {
   nights: number;
   lines: QuoteLine[];
   total: number;
-  /** Van olyan éjszaka, amelyre nincs érvényes árunk (még nem árazott év). */
-  needsQuote: boolean;
   holiday: HolidayPackage | null;
 };
 
@@ -166,7 +204,8 @@ export type Quote = {
  * Tájékoztató árkalkuláció a kiválasztott időszakra. Éjszakánként árazunk, a
  * saját évének árlistája szerint: az ünnepi csomag éjszakái csomagáron, a
  * csomag elé/mögé nyúló éjszakák szezonáron. Ha a kedvezményes ár jár, az
- * mind a 4 éjszakára vonatkozik.
+ * mind a 4 éjszakára vonatkozik. Árazatlan éjszakára nincs ár (`null`) – ezt
+ * a `validateStay` amúgy is kiszűri.
  */
 export function quote(
   checkIn: string,
@@ -179,7 +218,6 @@ export function quote(
   const days = daysBetween(checkIn, checkOut);
   const holiday = exactHolidayPackage(checkIn, checkOut) ?? holidayFor(checkIn);
   const lines: QuoteLine[] = [];
-  let needsQuote = false;
 
   const discount = discountFor(checkIn, checkOut, opts.guests);
   if (discount) {
@@ -203,10 +241,7 @@ export function quote(
         continue;
       }
       const s = seasonFor(d);
-      if (!s) {
-        needsQuote = true;
-        continue;
-      }
+      if (!s) return null;
       const year = d.slice(0, 4);
       const key = `${year}-${s.id}`;
       const entry = szezonok.get(key) ?? {
@@ -219,7 +254,7 @@ export function quote(
     }
     for (const { pkg, nights: n } of csomagok.values()) {
       lines.push({
-        label: `${pkg.label} csomag`,
+        label: pkg.name,
         detail: `${n} éj × ${formatFt(pkg.pricePerNight)}`,
         amount: n * pkg.pricePerNight,
       });
@@ -246,7 +281,6 @@ export function quote(
     nights,
     lines,
     total: lines.reduce((sum, l) => sum + l.amount, 0),
-    needsQuote,
     holiday,
   };
 }
